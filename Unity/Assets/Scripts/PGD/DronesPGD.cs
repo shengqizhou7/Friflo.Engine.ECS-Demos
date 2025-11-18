@@ -1,11 +1,12 @@
 using System;
+using UnityEngine;
 
 namespace PGD.Drones
 {
     public class DronesPGD
     {
         public IECSWorld world;
-        public readonly int maxDroneCount = 256 * 1024;
+        public readonly int maxDroneCount = 2 * 1024;
 
         private readonly IQuery<Start, PGDPosition> startPositionQuery;
         private readonly IQuery<Target> targetQuery;
@@ -28,21 +29,22 @@ namespace PGD.Drones
 
         public void Initialize()
         {
-            // var batch = world.GetBatchBuilder();
-            // batch.AddComponent(new PGDPosition())
-            // .AddComponent(new PGDTransform())
-            // .AddComponent(new Start())
-            // .AddComponent(new Target())
-            // .AddTag<Disabled>();
+            Debug.Log("batch批量创建实体");
             
+            var batch = world.GetBatchBuilder(false);
+            batch.AddComponent(new PGDPosition())
+            .AddComponent(new PGDTransform())
+            .AddComponent(new Start())
+            .AddComponent(new Target())
+            .AddTag<Disabled>();
+
             for (int n = 0; n < maxDroneCount; n++)
             {
-                // batch.CreateEntity();
-                world.CreateEntity(new PGDPosition(), new Start(), new Target(), new PGDTransform(), ITags.Get<Disabled>());
+                batch.CreateEntity();
+                // world.CreateEntity(new PGDPosition(), new Start(), new Target(), new PGDTransform(), ITags.Get<Disabled>());
             }
             
-
-            // batch.ReleaseBatch();
+            batch.ReleaseBatch();
         }
 
         public void SetEntityCount(int count)

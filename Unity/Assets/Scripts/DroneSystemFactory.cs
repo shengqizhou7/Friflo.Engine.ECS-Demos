@@ -6,7 +6,7 @@ public static class DroneSystemFactory
 {
     private static readonly Dictionary<ImplementationType, Type> _systemMap = new()
     {
-        { ImplementationType.Entities, typeof(MoveDronesPGD) },
+        { ImplementationType.Entities, typeof(MoveDronesEntities) },
         { ImplementationType.PGD, typeof(MoveDronesPGD) }
     };
     private static ImplementationType _oldType = default;

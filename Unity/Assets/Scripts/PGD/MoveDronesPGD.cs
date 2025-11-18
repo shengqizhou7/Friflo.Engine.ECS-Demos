@@ -83,19 +83,20 @@ public class MoveDronesPGD : DroneSystemBase
         int n = 0;
         drones.transQuery.ForEachEntity(((ref PGDTransform transform, IEntity entity) =>
         {
-            // colorData[n] = new Vector4(neighborhoodColor.r, neighborhoodColor.g, neighborhoodColor.b, neighborhoodColor.a);
-            instData[n++] = transform.mtr.AsUnityMatrix4x4();
+            colorData[n] = new Vector4(neighborhoodColor.r, neighborhoodColor.g, neighborhoodColor.b, neighborhoodColor.a);
+            instData[n] = transform.mtr.AsUnityMatrix4x4();
+            n++;
         }));
-        //
+        
         // int entityCount = n;
-        //
+        
         // Vector4[] actualColors = new Vector4[entityCount];
         // for (int i = 0; i < entityCount; i++)
         // {
         //     actualColors[i] = colorData[i];
         // }
-        // propertyBlock.SetVectorArray("_BaseColors", actualColors);
-        // rp.matProps = propertyBlock;
+        propertyBlock.SetVectorArray("_BaseColor", colorData);
+        rp.matProps = propertyBlock;
         Graphics.RenderMeshInstanced(rp, _mesh, 0, instData, entityCount);
     }
 

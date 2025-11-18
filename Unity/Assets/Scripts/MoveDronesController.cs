@@ -85,7 +85,7 @@ public class MoveDronesController : MonoBehaviour
         foreach (var obj in allObjects)
         {
             if (obj != null && obj.activeInHierarchy &&
-                obj.transform.parent != null &&
+                obj.transform.parent == null &&
                 (obj.name.StartsWith("Entity_") ||
                  obj.name.StartsWith("Instance") ||
                  obj.name.StartsWith("Drone_")) &&
