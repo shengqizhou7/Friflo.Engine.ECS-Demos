@@ -2,11 +2,13 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Assertions.Must;
 using Vector3 = System.Numerics.Vector3;
-using Vector4 = System.Numerics.Vector4;
+// using Vector4 = System.Numerics.Vector4;
 
 namespace PGD.Drones
 {
     public struct Disabled : ITag {}
+    
+    public struct ColorToBeUpdated : ITag {}
 
     public struct Start : IComponent
     {
@@ -24,7 +26,8 @@ namespace PGD.Drones
 
         public CubeColor(Color color)
         {
-            Value = new Vector4(color.r, color.g, color.b, color.a);
+            // Value = new Vector4(color.r, color.g, color.b, color.a);
+            Value = color;
         }
     }
 }

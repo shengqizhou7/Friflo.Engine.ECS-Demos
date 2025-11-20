@@ -6,7 +6,7 @@ namespace PGD.Drones
     public class DronesPGD
     {
         public IECSWorld world;
-        public readonly int maxDroneCount = 2 * 1024;
+        public readonly int maxDroneCount = 255 * 1024;
 
         private readonly IQuery<Start, PGDPosition> startPositionQuery;
         private readonly IQuery<Target> targetQuery;
@@ -22,7 +22,7 @@ namespace PGD.Drones
             targetQuery = world.Query<Target>().WithoutAnyTags(ITags.Get<Disabled>());
             transPosQuery = world.Query<PGDTransform, PGDPosition, Start, Target>().WithoutAnyTags(ITags.Get<Disabled>());
             transQuery = world.Query<PGDTransform>().WithoutAnyTags(ITags.Get<Disabled>());
-            allQuery = world.Query();
+            allQuery = world.Query<PGDTransform, PGDPosition, Start, Target>(); // TODO: initialize前world中有三个未知实体，所以allQuery = world.Query（）会把这三个实体也查询到，影响SetEntityCount方法
             commandQueue = world.GetCommandQueue();
             commandQueue.EnableReuse = true;
         }
@@ -50,16 +50,18 @@ namespace PGD.Drones
         public void SetEntityCount(int count)
         {
             int i = 0;
+            int n = 0;
             foreach (var entity in allQuery.Entities)
             {
                 if (i++ < count)
                 {
                     commandQueue.RemoveTag<Disabled>(entity.Id);
+                    n++;
                 }
                 else
                 {
                     commandQueue.AddTag<Disabled>(entity.Id);
-                    commandQueue.AddComponent<PGDPosition>(entity.Id);
+                    // commandQueue.AddComponent<PGDPosition>(entity.Id);
                 }
             }
             commandQueue.Apply();
@@ -73,6 +75,14 @@ namespace PGD.Drones
             startPositionQuery.ForEachEntity((ref Start start,ref PGDPosition position, IEntity entity) => {
                 start.Value = position.vec3;
             });
+
+            // TODO: 兜底策略：删除所有ColorToBeUpdated标签
+            var colorUpdateSystem = world.FindSystem<ColorUpdateSystem>(true);
+            if (colorUpdateSystem != null)
+            {
+                world.RemoveSystem(world.FindSystem<ColorUpdateSystem>(true));
+                NeighborManager.ClearNeighborRelations();
+            }
         }
 
         public void SetTargetPlane(float duration, float distance)
@@ -104,6 +114,23 @@ namespace PGD.Drones
                 target.Value.Z = distance * ((n++ / edgeCount) % edgeCount) - offset;
                 x = (x + 1) % edgeCount;
             });
+        }
+        
+        internal void SetTargetRings(float duration, int radius, float distance, int count)
+        {
+            SetStart(duration);
+            var     entityCount = targetQuery.EntityCount;
+            int     ringCount   = Math.Max(1, entityCount / count);
+            float   ringCountF  = ringCount;
+            int n = 0;
+            targetQuery.ForEachEntity(((ref Target target, IEntity entity) =>
+            {
+                var pos = (n++ % ringCount) / ringCountF * Math.PI * 2;
+                var rot = System.Numerics.Matrix4x4.CreateRotationY((float)pos);
+                var y = distance * (n++ / ringCount);
+                var v = new System.Numerics.Vector3(radius, y, 0);
+                target.Value = System.Numerics.Vector3.Transform(v, rot);
+            })); 
         }
     }
 }

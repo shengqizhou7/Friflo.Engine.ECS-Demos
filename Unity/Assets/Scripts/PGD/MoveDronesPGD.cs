@@ -2,6 +2,7 @@ using System;
 using PGD;
 using PGD.Drones;
 using UnityEngine;
+using UnityEngine.Assertions.Must;
 
 public class MoveDronesPGD : DroneSystemBase
 {
@@ -15,12 +16,13 @@ public class MoveDronesPGD : DroneSystemBase
 
     private MaterialPropertyBlock propertyBlock;
     
-    public Color neighborhoodColor = Color.cyan;
+    public Color defaultColor = Color.gray;
     
     void Start()
     {
         entityCount = 1024;
         drones = new DronesPGD();
+        Debug.Log($"🔍 初始化前世界中的总实体数: {PGDGameContext.GetWorld().Query().EntityCount}"); // TODO: 为什么初始化前世界中的总实体数=3
         drones.Initialize();
         drones.SetEntityCount(entityCount);
         drones.SetTargetPlane(500, 1.2f);
@@ -46,8 +48,8 @@ public class MoveDronesPGD : DroneSystemBase
         {
             case Shape.Plane:	drones.SetTargetPlane(500, 1.2f); 		    break;
             case Shape.Cube:	drones.SetTargetCube (500, 1.2f);			break;
-            // case Shape.Ring:	drones.SetTargetRings(500, 24, 1.2f, 1);	break;
-            // case Shape.Rings:	drones.SetTargetRings(500, 20, 1.2f, 10);	break;
+            case Shape.Ring:	drones.SetTargetRings(500, 24, 1.2f, 1);	break;
+            case Shape.Rings:	drones.SetTargetRings(500, 20, 1.2f, 10);	break;
         }
     }
     
@@ -61,6 +63,7 @@ public class MoveDronesPGD : DroneSystemBase
         drones.SetEntityCount(entityCount);
         SetShape(shape);
         UpdateGuiCount();
+        // NeighborManager.ClearNeighborRelations();
     }
     
     public override void DecreaseCount() {
@@ -68,6 +71,7 @@ public class MoveDronesPGD : DroneSystemBase
         drones.SetEntityCount(entityCount);
         SetShape(shape);
         UpdateGuiCount();
+        // NeighborManager.ClearNeighborRelations();
     }
     
     void Update()
@@ -83,21 +87,38 @@ public class MoveDronesPGD : DroneSystemBase
         int n = 0;
         drones.transQuery.ForEachEntity(((ref PGDTransform transform, IEntity entity) =>
         {
-            colorData[n] = new Vector4(neighborhoodColor.r, neighborhoodColor.g, neighborhoodColor.b, neighborhoodColor.a);
+            // 检查实体是否有自定义颜色组件
+            if (entity.HasComponent<CubeColor>())
+            {
+                var cubeColor = entity.GetComponent<CubeColor>();
+                colorData[n] = cubeColor.Value;
+            }
+            else
+            {
+                // 使用默认颜色
+                colorData[n] = defaultColor;
+            }
+            
             instData[n] = transform.mtr.AsUnityMatrix4x4();
             n++;
         }));
         
-        // int entityCount = n;
+        // int renderCount = n;
         
-        // Vector4[] actualColors = new Vector4[entityCount];
-        // for (int i = 0; i < entityCount; i++)
+        // // 只传递实际需要渲染的颜色数据
+        // Vector4[] actualColors = new Vector4[renderCount];
+        // for (int i = 0; i < renderCount; i++)
         // {
         //     actualColors[i] = colorData[i];
         // }
+        
         propertyBlock.SetVectorArray("_BaseColor", colorData);
         rp.matProps = propertyBlock;
-        Graphics.RenderMeshInstanced(rp, _mesh, 0, instData, entityCount);
+        
+        // if (renderCount > 0)
+        // {
+            Graphics.RenderMeshInstanced(rp, _mesh, 0, instData, entityCount);
+        // }
     }
 
     public override void CleanupResources()
