@@ -1,10 +1,8 @@
 using UnityEngine;
 using System;
 using System.Collections;
-using Friflo.Engine.ECS;
 using TMPro;
 using UnityEngine.UI;
-using UnityEngine;
 using Unity.Entities;
 
 public enum ImplementationType
@@ -21,7 +19,7 @@ public class MoveDronesController : MonoBehaviour
     [SerializeField] protected Mesh mesh;
     
     [Header("实现选择")]
-    [SerializeField] private ImplementationType implementationType = ImplementationType.PGD;
+    [SerializeField] private ImplementationType implementationType = ImplementationType.Entities;
     
     private IDroneSystem _currentSystem;
 
@@ -36,16 +34,15 @@ public class MoveDronesController : MonoBehaviour
         }
         
         // 禁用 Unity Entities 系统（如果需要）
-        // var world = World.DefaultGameObjectInjectionWorld;
-        // if (world != null)
-        // {
-        //     var EntitiesSystem = world.GetOrCreateSystemManaged<Entities.Drones.DroneUpdateSystem>();
-        //     if (EntitiesSystem != null)
-        //     {
-        //         EntitiesSystem.Enabled = false;
-        //     }
-        // }
-        
+        var world = World.DefaultGameObjectInjectionWorld;
+        if (world != null)
+        {
+            var EntitiesSystem = world.GetOrCreateSystemManaged<Entities.Drones.DroneUpdateSystem>();
+            if (EntitiesSystem != null)
+            {
+                EntitiesSystem.Enabled = false;
+            }
+        }
     }
 
     private void Start()

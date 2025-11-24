@@ -1,5 +1,6 @@
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace PGD.Drones
 {
@@ -41,8 +42,14 @@ namespace PGD.Drones
         
         protected override void OnUpdate()
         {
+            // Debug.Log("ColorUpdateSystem update");
             if (Input.GetMouseButtonDown(0))
             {
+                if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+                {
+                    return;
+                }
+                
                 Debug.Log("🖱️ 点击了鼠标");
                 
                 // 不使用 Physics.Raycast（因为 Instanced 渲染没有 Collider）
@@ -146,6 +153,7 @@ namespace PGD.Drones
             
             // 添加/修改新的颜色组件
             entity.AddComponent(new CubeColor(colorToUse));
+            // entity.AddComponent(new CubeColor(Color.blue));
             Debug.Log($"➕ 更新了新的颜色组件");
             
             // 给所有cube加上待更新颜色的Tag
@@ -155,13 +163,14 @@ namespace PGD.Drones
             }
             cq.Apply();
             entity.RemoveTag<ColorToBeUpdated>();
-            
-            // 获取实体位置用于调试
-            if (entity.HasComponent<PGDTransform>())
+
+            // 该区域记录命中次数
+            RecordHitCounts(entity);
+            var directNeighborRelations = entity.GetRelations<NeighborOf>();
+            foreach (var directNeighborRelation in directNeighborRelations)
             {
-                ref var trans = ref entity.GetComponent<PGDTransform>();
-                Vector3 pos = new Vector3(trans.mtr.Translation.X, trans.mtr.Translation.Y, trans.mtr.Translation.Z);
-                Debug.Log($"📍 实体位置: {pos}");
+                var neighborEntity = directNeighborRelation.Target;
+                RecordHitCounts(neighborEntity);
             }
             
             // // 高亮所有邻居（当实现了 Relation 系统后取消注释）
@@ -186,33 +195,10 @@ namespace PGD.Drones
             //     
             //     Debug.Log($"✨ 高亮了 {neighbors.Count} 个邻居");
             // }
-            
-            
         }
 
         public void updateNeighborColors(Color color)
         {
-            // var cq = world.GetCommandQueue();
-            // GetQuery().ForEachEntity(((ref PGDTransform trans, ref PGDPosition pos, ref Start _, ref Target _, IEntity entity) =>
-            // {
-            //     if (entity.TryGetComponent<CubeColor>(out var cubeColor) && cubeColor.Value.Equals(color))
-            //     {
-            //         return;
-            //     }
-            //     // 当前是未被染色的drone
-            //     // 判断其邻居们是否有目标颜色，一旦检测到一个邻居，则该drone需要染色
-            //     var relations = entity.GetRelations<NeighborOf>();
-            //     // var beRelations = entity.GetBeRelatedLinks<NeighborOf>();
-            //     foreach (var relation in relations)
-            //     {
-            //         if (relation.Target.TryGetComponent<CubeColor>(out var cubeColor))
-            //         {
-            //             
-            //         }
-            //     }
-            //     cq.AddComponent(entity.Id, new CubeColor(color));
-            // }));
-            // cq.Apply();
             var cq = world.GetCommandQueue();
             var queryRelation = world.QueryRelation<NeighborOf>();
             queryRelation.ForEachEntity((ref NeighborOf neighborOf, IEntity entity) =>
@@ -232,71 +218,20 @@ namespace PGD.Drones
             cq.Apply();
             // Debug.Log($"处理了{queryRelation.EntityCount}个实体");
         }
-        
-        /// <summary>
-        /// 使用射线查找最近的实体（数学方法，不依赖物理系统）
-        /// 缺陷：不支持立方体阵列
-        /// </summary>
-        // private IEntity FindNearestEntityOnRay(Ray ray)
-        // {
-        //     // var query = world.Query().WithAllComponents(IComponents.Get<PGDTransform, PGDPosition, Start, Target>()).WithoutAnyTags(ITags.Get<Disabled>());
-        //     var query = GetQuery();
-        //     IEntity nearest = default;
-        //     float minDistance = float.MaxValue;
-        //     float maxClickDistance = 1.5f; // 最大点击距离（单位：米）
-            
-        //     Vector3 rayOrigin = ray.origin;
-        //     Vector3 rayDirection = ray.direction.normalized;
-            
-        //     foreach (var entity in query.Entities)
-        //     {
-        //         ref var trans = ref entity.GetComponent<PGDTransform>();
-                
-        //         Vector3 entityPos = new Vector3(
-        //             trans.mtr.Translation.X, 
-        //             trans.mtr.Translation.Y, 
-        //             trans.mtr.Translation.Z
-        //         );
-                
-        //         // 计算射线到点的最短距离
-        //         // 公式：distance = ||(P - O) - ((P - O) · d) * d||
-        //         Vector3 toPoint = entityPos - rayOrigin;
-        //         float dotProduct = Vector3.Dot(toPoint, rayDirection);
-                
-        //         // 如果点在射线后面，跳过
-        //         if (dotProduct < 0) continue;
-                
-        //         // 计算射线上最近点到实体的距离
-        //         Vector3 closestPointOnRay = rayOrigin + rayDirection * dotProduct;
-        //         float distance = Vector3.Distance(closestPointOnRay, entityPos);
-                
-        //         // 找到距离最近且在点击范围内的实体
-        //         if (distance < minDistance && distance < maxClickDistance)
-        //         {
-        //             minDistance = distance;
-        //             nearest = entity;
-        //         }
-        //     }
-            
-        //     Debug.Log($"🎯 最近实体距离射线: {minDistance:F2}m");
-        //     return nearest;
-        // }
+
         private IEntity FindNearestEntityOnRay(Ray ray)
         {
             var query = GetQuery();
-            Debug.Log($"{query.EntityCount} ");
             IEntity nearest = default;
 
-            float minAlongRay = float.MaxValue;      // 离摄像机最近的深度
-            float minPerpDistance = float.MaxValue;  // 同深度时比较垂直距离
-            const float epsilon = 0.1f;              // 增大容差，避免浮点精度问题
-            float maxPerpDistance = 2.0f;            // 增大垂直阈值到 2.0 米
+            Vector3 origin = ray.origin;
+            Vector3 direction = ray.direction.normalized;
 
-            Vector3 rayOrigin = ray.origin;
-            Vector3 rayDirection = ray.direction.normalized;
-            
-            int candidateCount = 0;
-            int selectedCount = 0;
+            const float cubeRadius = 0.6f;              // 方块半径（米），根据阵列大小可调
+            // const float depthBias = 0.015f;             // 深度权重，越靠近摄像机权重越高
+            const float depthBias = 1f;             // 深度权重，越靠近摄像机权重越高
+
+            float bestScore = float.MaxValue;
 
             foreach (var entity in query.Entities)
             {
@@ -307,77 +242,43 @@ namespace PGD.Drones
                     trans.mtr.Translation.Z
                 );
 
-                Vector3 toPoint = entityPos - rayOrigin;
-                float alongRay = Vector3.Dot(toPoint, rayDirection);
-                if (alongRay < 0f) continue;              // 背向摄像机
+                Vector3 toPoint = entityPos - origin;
+                float alongRay = Vector3.Dot(toPoint, direction);
+                if (alongRay < 0f) continue; // 在相机后方
 
-                Vector3 closestPoint = rayOrigin + rayDirection * alongRay;
+                Vector3 closestPoint = origin + direction * alongRay;
                 float perpDistance = Vector3.Distance(closestPoint, entityPos);
-                
-                if (perpDistance > maxPerpDistance) continue;
-                
-                candidateCount++;
 
-                // 核心逻辑：优先选择沿射线最近的实体（遮挡效果）
-                bool closerAlongRay = alongRay < minAlongRay - epsilon;
-                bool sameDepthButCloser =
-                    Mathf.Abs(alongRay - minAlongRay) <= epsilon &&
-                    perpDistance < minPerpDistance - epsilon;
+                // 根据深度扩展容差，越远的实体允许稍大的偏差
+                float dynamicRadius = cubeRadius + alongRay * 0.01f;
+                if (perpDistance > dynamicRadius) continue;
 
-                if (closerAlongRay || sameDepthButCloser)
+                float score = perpDistance + alongRay * depthBias;
+                if (score < bestScore)
                 {
-                    minAlongRay = alongRay;
-                    minPerpDistance = perpDistance;
+                    bestScore = score;
                     nearest = entity;
-                    selectedCount++;
                 }
             }
 
-            if (nearest != null)
+            if (nearest == null)
             {
-                Debug.Log($"🎯 选中实体 ID:{nearest.Id} | 垂直距离: {minPerpDistance:F3}m | 深度: {minAlongRay:F3}m | 候选数: {candidateCount} | 更新次数: {selectedCount}");
+                Debug.Log("❌ 没有找到与射线足够接近的实体");
             }
-            else if (candidateCount > 0)
+
+            return nearest;
+        }
+
+        private void RecordHitCounts(IEntity entity)
+        {
+            if (!entity.HasComponent<HitCounter>())
             {
-                Debug.LogWarning($"⚠️ 找到 {candidateCount} 个候选实体，但没有选中任何实体（逻辑可能有误）");
+                entity.AddComponent<HitCounter>(new HitCounter{ counts = 1 });
             }
             else
             {
-                Debug.Log($"❌ 没有找到候选实体（垂直距离 > {maxPerpDistance}m）");
+                entity.AddComponent(new HitCounter { counts = entity.GetComponent<HitCounter>().counts + 1 });
             }
-            
-            return nearest;
         }
-        
-        // /// <summary>
-        // /// 根据位置查找最近的实体（备用方法）
-        // /// </summary>
-        // private IEntity FindNearestEntity(Vector3 position)
-        // {
-        //     var query = world.Query().WithAllComponents(IComponents.Get<PGDTransform, PGDPosition, Start, Target>()).WithoutAnyTags(ITags.Get<Disabled>());
-        //     IEntity nearest = default;
-        //     float minDistance = float.MaxValue;
-        //     
-        //     foreach (var entity in query.Entities)
-        //     {
-        //         ref var trans = ref entity.GetComponent<PGDTransform>();
-        //         
-        //         // 修复：Z 坐标应该用 Translation.Z 而不是 Translation.X
-        //         Vector3 entityPos = new Vector3(
-        //             trans.mtr.Translation.X, 
-        //             trans.mtr.Translation.Y, 
-        //             trans.mtr.Translation.Z
-        //         );
-        //         
-        //         float distance = Vector3.Distance(position, entityPos);
-        //         if (distance < minDistance && distance < 2f)  // 2米范围内
-        //         {
-        //             minDistance = distance;
-        //             nearest = entity;
-        //         }
-        //     }
-        //     
-        //     return nearest;
-        // }
     }
 }

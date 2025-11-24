@@ -25,6 +25,8 @@ namespace PGD.Drones
             allQuery = world.Query<PGDTransform, PGDPosition, Start, Target>(); // TODO: initialize前world中有三个未知实体，所以allQuery = world.Query（）会把这三个实体也查询到，影响SetEntityCount方法
             commandQueue = world.GetCommandQueue();
             commandQueue.EnableReuse = true;
+            
+            world.RegisterSystem(new DroneUpdateTransformSystem());
         }
 
         public void Initialize()
@@ -75,14 +77,8 @@ namespace PGD.Drones
             startPositionQuery.ForEachEntity((ref Start start,ref PGDPosition position, IEntity entity) => {
                 start.Value = position.vec3;
             });
-
-            // TODO: 兜底策略：删除所有ColorToBeUpdated标签
-            var colorUpdateSystem = world.FindSystem<ColorUpdateSystem>(true);
-            if (colorUpdateSystem != null)
-            {
-                world.RemoveSystem(world.FindSystem<ColorUpdateSystem>(true));
-                NeighborManager.ClearNeighborRelations();
-            }
+            
+            CleanUp();
         }
 
         public void SetTargetPlane(float duration, float distance)
@@ -116,7 +112,7 @@ namespace PGD.Drones
             });
         }
         
-        internal void SetTargetRings(float duration, int radius, float distance, int count)
+        public void SetTargetRings(float duration, int radius, float distance, int count)
         {
             SetStart(duration);
             var     entityCount = targetQuery.EntityCount;
@@ -131,6 +127,22 @@ namespace PGD.Drones
                 var v = new System.Numerics.Vector3(radius, y, 0);
                 target.Value = System.Numerics.Vector3.Transform(v, rot);
             })); 
+        }
+
+        // 切换实现方法/排布阵列时清理资源
+        public void CleanUp()
+        {
+            NeighborManager.ClearNeighborRelations(); // 清除邻居关系
+            NeighborManager.ClearAllColors(); // 清理颜色和颜色待更新标签
+            NeighborManager.ClearHitCounters(); // 清除命中计数器lookup
+
+            // TODO: FindSystem的bool参数含义
+            // 删除颜色更新系统
+            var colorUpdateSystem = world.FindSystem<ColorUpdateSystem>(false);
+            if (colorUpdateSystem != null && colorUpdateSystem.Activated)
+            {
+                world.RemoveSystem(colorUpdateSystem);
+            }
         }
     }
 }

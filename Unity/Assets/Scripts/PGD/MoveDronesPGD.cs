@@ -123,6 +123,12 @@ public class MoveDronesPGD : DroneSystemBase
 
     public override void CleanupResources()
     {
+        drones.CleanUp();
         
+        var droneUpdateTransformSystem = PGDGameContext.GetWorld().FindSystem<DroneUpdateTransformSystem>(false);
+        if (droneUpdateTransformSystem != null && droneUpdateTransformSystem.Activated)
+        {
+            PGDGameContext.GetWorld().RemoveSystem(droneUpdateTransformSystem);
+        }
     }
 }

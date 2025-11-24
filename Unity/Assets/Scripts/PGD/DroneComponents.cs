@@ -30,4 +30,10 @@ namespace PGD.Drones
             Value = color;
         }
     }
+
+    public struct HitCounter : ILookup<int>
+    {
+        public int counts;
+        public int GetLookup() => counts;
+    }
 }

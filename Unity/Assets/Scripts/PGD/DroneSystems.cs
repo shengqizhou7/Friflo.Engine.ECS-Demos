@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace PGD.Drones
 {
+    [DisableAutoRegister]
     public partial class DroneUpdateTransformSystem : PGDSystem<PGDTransform, PGDPosition, Start, Target>
     {
         private static float s_GlobalTime = 0f;
@@ -20,6 +21,7 @@ namespace PGD.Drones
 
         protected override void OnUpdate()
         {
+            // Debug.Log("DroneUpdateTransformSystem running");
             s_GlobalTime += Time.deltaTime;
             Elapsed += Time.deltaTime * 1000;
             var complete = Math.Min(Elapsed / Duration, 1);
