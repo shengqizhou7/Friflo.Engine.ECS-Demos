@@ -53,17 +53,16 @@ public class MoveDronesPGD : DroneSystemBase
         }
     }
     
-    public override void SetTargetPlane()    => SetShape(Shape.Plane);
-    public override void SetTargetCube()     => SetShape(Shape.Cube);
-    public override void SetTargetRing()     => SetShape(Shape.Ring);
-    public override void SetTargetRings()    => SetShape(Shape.Rings);
+    public override void SetTargetPlane() => SetShape(Shape.Plane);
+    public override void SetTargetCube() => SetShape(Shape.Cube);
+    public override void SetTargetRing() => SetShape(Shape.Ring);
+    public override void SetTargetRings() => SetShape(Shape.Rings);
     
     public override void IncreaseCount() {
         entityCount = Math.Min(drones.maxDroneCount, entityCount * 2);
         drones.SetEntityCount(entityCount);
         SetShape(shape);
         UpdateGuiCount();
-        // NeighborManager.ClearNeighborRelations();
     }
     
     public override void DecreaseCount() {
@@ -71,7 +70,6 @@ public class MoveDronesPGD : DroneSystemBase
         drones.SetEntityCount(entityCount);
         SetShape(shape);
         UpdateGuiCount();
-        // NeighborManager.ClearNeighborRelations();
     }
     
     void Update()
@@ -80,9 +78,6 @@ public class MoveDronesPGD : DroneSystemBase
         if (sampleIndex >= fpsSampleCount) sampleIndex = 0;
         
         UpdateFps();
-        
-        // var deltaTime = Time.deltaTime * 1000;
-        // drones.UpdateTransforms(deltaTime, default);
 
         int n = 0;
         drones.transQuery.ForEachEntity(((ref PGDTransform transform, IEntity entity) =>

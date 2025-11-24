@@ -1,6 +1,7 @@
 using PGD;
 using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine.UI; 
 
 namespace PGD.Drones
 {
@@ -14,12 +15,28 @@ namespace PGD.Drones
     // public class NeighborManager : PGDSystem<PGDTransform, PGDPosition, Start, Target>
     public class NeighborManager : MonoBehaviour
     {
+        private static NeighborManager instance;
+        
         private float neighborDistance = 2f; //TODO: 是否应该在不同排列场景中设置不同的数值？
         public static bool relationBuilt; // 是否已构建过邻居关系
+        [SerializeField] private Button hotSpotButton;
+        [SerializeField] private Button relationButton;
     
         private static IECSWorld world = PGDGameContext.GetWorld();
         private static IQuery query = PGDGameContext.GetWorld().Query().WithAllComponents(IComponents.Get<PGDTransform, PGDPosition, Start, Target>()).WithoutAnyTags(ITags.Get<Disabled>());
         private IEntity selectedEntity;
+
+        private void Awake()
+        {
+            instance = this;
+            UpdateHotSpotButtonState();
+        }
+
+        private static void UpdateHotSpotButtonState()
+        {
+            instance.hotSpotButton.interactable = relationBuilt;
+            instance.relationButton.interactable = !relationBuilt;
+        }
 
         // 清除邻居关系
         public static void ClearNeighborRelations()
@@ -35,7 +52,7 @@ namespace PGD.Drones
             Debug.Log($"清除了 {n} 个实体的邻居关系。残留 { world.QueryRelation<NeighborOf>().EntityCount } 个关系");
             
             relationBuilt = false;
-            GameObject.Find("MoveDrones")?.transform.Find("HotSpot").gameObject.SetActive(false); // 禁用HotSpot按钮
+            UpdateHotSpotButtonState();
         }
 
         // 清除颜色组件和待更新颜色的标签
@@ -101,7 +118,7 @@ namespace PGD.Drones
             
             world.RegisterSystem(new ColorUpdateSystem()); // 玩家点击添加关系按钮时注册颜色变换系统
             relationBuilt = true; // 标志已建立邻居关系
-            GameObject.Find("MoveDrones")?.transform.Find("HotSpot").gameObject.SetActive(true); // 启用HotSpot按钮
+            UpdateHotSpotButtonState();
         }
 
         // 生成命中热点图
@@ -122,11 +139,10 @@ namespace PGD.Drones
                 var buckets = hitsLookup[hits];
                 Color color = hits switch
                 {
-                    1 => new Color(0.95f, 0.78f, 0.15f, 1f),               // cool green
-                    >= 2 and <= 3 => new Color(1.0f, 0.42f, 0.1f, 1f),  // warm amber
-                    >= 4 and <= 5 => new Color(0.95f, 0.08f, 0.0f, 1f),    // hot orange
-                    >= 6 => new Color(0.95f, 0.08f, 0.0f, 1f),            // lava red
-                    _ => new Color(0.25f, 0.25f, 0.25f, 1f)               // default gray
+                    1 => new Color(0.95f, 0.78f, 0.15f, 1f),
+                    >= 2 and <= 3 => new Color(1.0f, 0.42f, 0.1f, 1f),
+                    >= 4 => new Color(0.95f, 0.08f, 0.0f, 1f),
+                    _ => new Color(0.25f, 0.25f, 0.25f, 1f)
                 };
 
                 foreach (var entityId in buckets.Ids)
@@ -134,7 +150,7 @@ namespace PGD.Drones
                     cq.AddComponent(entityId, new CubeColor { Value = color });
                 }
             }
-
+            
             cq.Apply();
         }
     }

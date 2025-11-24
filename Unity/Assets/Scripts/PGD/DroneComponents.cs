@@ -26,7 +26,6 @@ namespace PGD.Drones
 
         public CubeColor(Color color)
         {
-            // Value = new Vector4(color.r, color.g, color.b, color.a);
             Value = color;
         }
     }
