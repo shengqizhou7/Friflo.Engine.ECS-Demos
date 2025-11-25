@@ -24,6 +24,11 @@ public interface IDroneSystem
     void SetTargetRings();
     void IncreaseCount();
     void DecreaseCount();
+    void BuildNeighborRelations();
+    void ClearNeighborRelations();
+    void ClearAllColors();
+    void ClearHitCounters();
+    void GenerateHotspotGraph();
     void CleanupResources();
 }
 
@@ -73,6 +78,11 @@ public abstract class DroneSystemBase : MonoBehaviour, IDroneSystem
     public abstract void IncreaseCount();
     public abstract void DecreaseCount();
     public abstract void CleanupResources();
+    public abstract void BuildNeighborRelations();
+    public abstract void ClearNeighborRelations();
+    public abstract void ClearAllColors();
+    public abstract void ClearHitCounters();
+    public abstract void GenerateHotspotGraph();
 
     private void HideEditorPlane()
     {

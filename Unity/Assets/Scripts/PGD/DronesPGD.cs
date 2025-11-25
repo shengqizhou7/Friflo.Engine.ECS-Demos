@@ -10,7 +10,7 @@ namespace PGD.Drones
 
         private readonly IQuery<Start, PGDPosition> startPositionQuery;
         private readonly IQuery<Target> targetQuery;
-        private readonly IQuery<PGDTransform, PGDPosition, Start, Target> transPosQuery;
+        private readonly IQuery<PGDTransform, PGDPosition, Start, Target> activeQuery;
         public readonly IQuery<PGDTransform> transQuery;
         private readonly IQuery allQuery;
         private readonly CommandQueue commandQueue;
@@ -20,7 +20,7 @@ namespace PGD.Drones
             world = PGDGameContext.GetWorld();
             startPositionQuery = world.Query<Start, PGDPosition>().WithoutAnyTags(ITags.Get<Disabled>());
             targetQuery = world.Query<Target>().WithoutAnyTags(ITags.Get<Disabled>());
-            transPosQuery = world.Query<PGDTransform, PGDPosition, Start, Target>().WithoutAnyTags(ITags.Get<Disabled>());
+            activeQuery = world.Query<PGDTransform, PGDPosition, Start, Target>().WithoutAnyTags(ITags.Get<Disabled>());
             transQuery = world.Query<PGDTransform>().WithoutAnyTags(ITags.Get<Disabled>());
             allQuery = world.Query<PGDTransform, PGDPosition, Start, Target>(); // TODO: initialize前world中有三个未知实体，所以allQuery = world.Query（）会把这三个实体也查询到，影响SetEntityCount方法
             commandQueue = world.GetCommandQueue();
@@ -38,6 +38,7 @@ namespace PGD.Drones
             .AddComponent(new PGDTransform())
             .AddComponent(new Start())
             .AddComponent(new Target())
+            .AddComponent(new CubeColor())
             .AddTag<Disabled>();
 
             for (int n = 0; n < maxDroneCount; n++)
@@ -51,6 +52,8 @@ namespace PGD.Drones
 
         public void SetEntityCount(int count)
         {
+            CleanUp();
+            
             int i = 0;
             int n = 0;
             foreach (var entity in allQuery.Entities)
@@ -78,7 +81,7 @@ namespace PGD.Drones
                 start.Value = position.vec3;
             });
             
-            CleanUp();
+            CleanUp(); // TODO: 增减cube数量时，由于会先调用SetEntityCount，CleanUp会调用两次
         }
 
         public void SetTargetPlane(float duration, float distance)
@@ -132,9 +135,9 @@ namespace PGD.Drones
         // 切换实现方法/排布阵列时清理资源
         public void CleanUp()
         {
-            NeighborManager.ClearNeighborRelations(); // 清除邻居关系
-            NeighborManager.ClearAllColors(); // 清理颜色和颜色待更新标签
-            NeighborManager.ClearHitCounters(); // 清除命中计数器lookup
+            ClearNeighborRelations(); // 清除邻居关系
+            ClearAllColors(); // 清理颜色和颜色待更新标签
+            ClearHitCounters(); // 清除命中计数器lookup
 
             // TODO: FindSystem的bool参数含义
             // 删除颜色更新系统
@@ -143,6 +146,126 @@ namespace PGD.Drones
             {
                 world.RemoveSystem(colorUpdateSystem);
             }
+        }
+        
+        // 清除邻居关系
+        public void ClearNeighborRelations()
+        {
+            if (!NeighborManager.relationBuilt) return;
+            
+            int n = 0;
+            var queryRelation = world.QueryRelation<NeighborOf>();
+            queryRelation.ForEachEntity((ref NeighborOf neighborOf, IEntity entity) =>
+            {
+                entity.RemoveRelation<NeighborOf>(neighborOf.Target);
+                n++;
+            });
+            
+            Debug.Log($"清除了 {n} 个实体的邻居关系。残留 { world.QueryRelation<NeighborOf>().EntityCount } 个关系");
+            
+            NeighborManager.relationBuilt = false;
+            NeighborManager.UpdateHotSpotButtonState();
+        }
+
+        // 清除颜色组件和待更新颜色的标签
+        public void ClearAllColors()
+        {
+            var cq = world.GetCommandQueue();
+            // var queryColors = query.WithAllComponents(IComponents.Get<CubeColor>()); 
+            foreach (var entity in activeQuery.Entities)
+            {
+                // if (entity.HasComponent<CubeColor>() || entity.HasTag<ColorToBeUpdated>())
+                // {
+                    cq.RemoveComponent<CubeColor>(entity.Id);
+                    cq.RemoveTag<ColorToBeUpdated>(entity.Id);
+                // }
+            }
+            
+            Debug.Log($"清除了{activeQuery.EntityCount}个实体的CubeColor和ColorToBeUpdated");
+            cq.Apply();
+        }
+        
+        // 清除记录命中次数的Lookup组件
+        public void ClearHitCounters()
+        {
+            var cq = world.GetCommandQueue();
+            var hitQuery = world.Query<HitCounter>();
+            foreach (var entity in hitQuery.Entities)
+            {
+                cq.RemoveComponent<HitCounter>(entity.Id);
+            }
+            cq.Apply();
+        }
+        
+        // 建立邻居关系
+        public void BuildNeighborRelations()
+        {
+            if (NeighborManager.relationBuilt) return;
+            
+            ClearNeighborRelations();
+
+            // 建立新关系
+            foreach (var entityA in activeQuery.Entities)
+            {
+                foreach (var entityB in activeQuery.Entities)
+                {
+                    if (entityA.Id == entityB.Id) continue;
+                    
+                    ref var transA = ref entityA.GetComponent<PGDTransform>();
+                    ref var transB = ref entityB.GetComponent<PGDTransform>();
+
+                    // 提取位置
+                    Vector3 posA = new Vector3(transA.mtr.Translation.X, transA.mtr.Translation.Y,
+                        transA.mtr.Translation.Z);
+                    Vector3 posB = new Vector3(transB.mtr.Translation.X, transB.mtr.Translation.Y,
+                        transB.mtr.Translation.Z);
+
+                    float distance = Vector3.Distance(posA, posB);
+
+                    if (distance <= NeighborManager.neighborDistance)
+                    {
+                        entityA.AddRelation(new NeighborOf { Target = entityB, Distance = distance }, out _);
+                    }
+                }
+            }
+            Debug.Log($"共 {activeQuery.Entities.Count} 个实体建立了邻居关系，当前共有 {world.QueryRelation<NeighborOf>().EntityCount} 条关系");
+            
+            world.RegisterSystem(new ColorUpdateSystem()); // 玩家点击添加关系按钮时注册颜色变换系统
+            NeighborManager.relationBuilt = true; // 标志已建立邻居关系
+            NeighborManager.UpdateHotSpotButtonState();
+        }
+
+        // 生成命中热点图
+        public void GenerateHotspotGraph()
+        {
+            var cq = world.GetCommandQueue();
+            
+            foreach (var entity in activeQuery.Entities)
+            {
+                cq.AddComponent(entity.Id, new CubeColor { Value = Color.gray });
+                cq.RemoveTag<ColorToBeUpdated>(entity.Id);
+            }
+            
+            var hitsLookup = world.ComponentLookup<HitCounter, int>();
+
+            foreach (var hits in hitsLookup.Values)
+            {
+                var buckets = hitsLookup[hits];
+                Color color = hits switch
+                {
+                    1 => new Color(0.95f, 0.78f, 0.15f, 1f),
+                    >= 2 and <= 3 => new Color(1.0f, 0.42f, 0.1f, 1f),
+                    >= 4 => new Color(0.95f, 0.08f, 0.0f, 1f),
+                    _ => new Color(0.25f, 0.25f, 0.25f, 1f)
+                };
+
+                foreach (var entityId in buckets.Ids)
+                {
+                    cq.AddComponent(entityId, new CubeColor { Value = color });
+                }
+            }
+            
+            cq.Apply();
         }
     }
 }

@@ -186,4 +186,29 @@ public class MoveDronesEntities : DroneSystemBase
             }
         }
     }
+
+    public override void BuildNeighborRelations()
+    {
+        throw new NotImplementedException();
+    }
+
+    public override void ClearNeighborRelations()
+    {
+        throw new NotImplementedException();
+    }
+
+    public override void ClearAllColors()
+    {
+        throw new NotImplementedException();
+    }
+
+    public override void ClearHitCounters()
+    {
+        throw new NotImplementedException();
+    }
+
+    public override void GenerateHotspotGraph()
+    {
+        throw new NotImplementedException();
+    }
 }

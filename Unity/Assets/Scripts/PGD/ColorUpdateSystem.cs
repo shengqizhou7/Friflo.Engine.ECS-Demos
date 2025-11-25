@@ -26,16 +26,18 @@ namespace PGD.Drones
         // 正在传播的颜色（当传播进行中时，保持不变）
         private Color? propagatingColor;
     
-        private IECSWorld world = PGDGameContext.GetWorld();
+        // private IECSWorld world = PGDGameContext.GetWorld();
         private CommandQueue cq;
         private IQuery queryColorToBeUpdated;
+        private IQuery<NeighborOf> queryRelation;
         
         protected override void OnAddWorld(IECSWorld world)
         {
             QueryFilter.WithoutAnyTags(ITags.Get<Disabled>());
             cq = world.GetCommandQueue();
             cq.EnableReuse = true;
-            queryColorToBeUpdated = world.Query().WithAllComponents(IComponents.Get<PGDTransform, PGDPosition, Start, Target>()).WithoutAnyTags(ITags.Get<Disabled>()).WithAllTags(ITags.Get<ColorToBeUpdated>());
+            queryColorToBeUpdated = world.Query().WithAllTags(ITags.Get<ColorToBeUpdated>());
+            queryRelation = world.QueryRelation<NeighborOf>().WithAllTags(ITags.Get<ColorToBeUpdated>());
         }
         
         protected override void OnUpdate()
@@ -112,6 +114,7 @@ namespace PGD.Drones
             }
             cq.Apply();
             entity.RemoveTag<ColorToBeUpdated>();
+            Debug.Log($"给{GetQuery().EntityCount - 1}个实体添加了ColorToBeUpdated");
 
             // 该区域cube更新命中次数
             RecordHitCounts(entity);
@@ -125,24 +128,17 @@ namespace PGD.Drones
 
         public void updateNeighborColors(Color color)
         {
-            var cq = world.GetCommandQueue();
-            var queryRelation = world.QueryRelation<NeighborOf>();
             queryRelation.ForEachEntity((ref NeighborOf neighborOf, IEntity entity) =>
             {
-                // 筛选出当前已经是目标颜色的方块，对其邻居进行染色
-                if (entity.TryGetComponent<CubeColor>(out var cubeColor) && cubeColor.Value.Equals(color))
+                // 对于每个待更新颜色的方块，如果其邻居有目标颜色，则更新当前方块颜色
+                ref var targetEntity = ref neighborOf.Target;
+                if (targetEntity.TryGetComponent<CubeColor>(out var cubeColor) && cubeColor.Value.Equals(color))
                 {
-                    ref var targetEntity = ref neighborOf.Target;
-                    if (!targetEntity.HasComponent<CubeColor>() ||
-                        !targetEntity.GetComponent<CubeColor>().Value.Equals(color))
-                    {
-                        cq.AddComponent(targetEntity.Id, new CubeColor(color));
-                        cq.RemoveTag<ColorToBeUpdated>(targetEntity.Id);
-                    }
+                    cq.AddComponent(entity.Id, new CubeColor(color));
+                    cq.RemoveTag<ColorToBeUpdated>(entity.Id);
                 }
             });
             cq.Apply();
-            // Debug.Log($"处理了{queryRelation.EntityCount}个实体");
         }
 
         private IEntity FindNearestEntityOnRay(Ray ray)

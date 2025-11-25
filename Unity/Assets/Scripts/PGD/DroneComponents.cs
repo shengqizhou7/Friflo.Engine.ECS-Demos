@@ -35,4 +35,11 @@ namespace PGD.Drones
         public int counts;
         public int GetLookup() => counts;
     }
+    
+    public struct NeighborOf : IEntityRelation
+    {
+        public IEntity Target;
+        public float Distance;
+        public IEntity GetGenericKey() => Target;
+    }
 }

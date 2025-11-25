@@ -1,6 +1,7 @@
 using UnityEngine;
 using System;
 using System.Collections;
+using PGD.Drones;
 using TMPro;
 using UnityEngine.UI;
 using Unity.Entities;
@@ -21,7 +22,7 @@ public class MoveDronesController : MonoBehaviour
     [Header("实现选择")]
     [SerializeField] private ImplementationType implementationType = ImplementationType.Entities;
     
-    private IDroneSystem _currentSystem;
+    public static IDroneSystem _currentSystem;
 
     private void Awake()
     {
@@ -58,6 +59,7 @@ public class MoveDronesController : MonoBehaviour
         _currentSystem = DroneSystemFactory.CreateSystem(newType, gameObject);
         InitializeSystem(_currentSystem);
         _currentSystem.EnableSystem();
+        NeighborManager._currentSystem =  _currentSystem;
     }
 
     private void InitializeSystem(IDroneSystem system)

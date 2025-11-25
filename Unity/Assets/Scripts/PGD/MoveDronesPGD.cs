@@ -126,4 +126,14 @@ public class MoveDronesPGD : DroneSystemBase
             PGDGameContext.GetWorld().RemoveSystem(droneUpdateTransformSystem);
         }
     }
+
+    public override void BuildNeighborRelations() => drones.BuildNeighborRelations();
+
+    public override void ClearNeighborRelations() => drones.ClearNeighborRelations();
+
+    public override void ClearAllColors() => drones.ClearAllColors();
+
+    public override void ClearHitCounters() => drones.ClearHitCounters();
+
+    public override void GenerateHotspotGraph() => drones.GenerateHotspotGraph();
 }
