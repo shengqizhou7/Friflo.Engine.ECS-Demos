@@ -22,7 +22,7 @@ public class MoveDronesPGD : DroneSystemBase
     {
         entityCount = 1024;
         drones = new DronesPGD();
-        Debug.Log($"🔍 初始化前世界中的总实体数: {PGDGameContext.GetWorld().Query().EntityCount}"); // TODO: 为什么初始化前世界中的总实体数=3
+        Debug.Log($"初始化前PGD世界中的总实体数: {PGDGameContext.GetWorld().Query().EntityCount}"); // TODO: 为什么初始化前世界中的总实体数=3
         drones.Initialize();
         drones.SetEntityCount(entityCount);
         drones.SetTargetPlane(500, 1.2f);

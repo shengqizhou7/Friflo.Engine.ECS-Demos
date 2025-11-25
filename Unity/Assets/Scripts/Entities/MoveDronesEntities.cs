@@ -20,8 +20,10 @@ public class MoveDronesEntities : DroneSystemBase
     public Color defaultColor = Color.gray;
     
     private EntityQuery entitiesQuery; 
+    private EntityQuery allDronesQuery;
     private ComponentTypeHandle<LocalTransform> transfromTypeHandle;
     private ComponentTypeHandle<CubeColor> cubeColorTypeHandle;
+    private EntityManager entityManager;
 
     private NativeArray<float4x4> transfromMatrices;
  
@@ -29,6 +31,7 @@ public class MoveDronesEntities : DroneSystemBase
     {
         entityCount = 1024;
         drones = new DronesEntities();
+        Debug.Log($"初始化前DOTS世界中的总实体数: {World.DefaultGameObjectInjectionWorld.EntityManager.UniversalQuery.CalculateEntityCount()}");
         drones.Initialize();
         drones.SetEntityCount(entityCount);
         drones.SetTargetPlane(500, 1.2f);
@@ -46,12 +49,13 @@ public class MoveDronesEntities : DroneSystemBase
             editorPlane.SetActive(false);
         }
 
-        entitiesQuery = World.DefaultGameObjectInjectionWorld.EntityManager.CreateEntityQuery(
+        entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+        entitiesQuery = entityManager.CreateEntityQuery(
             ComponentType.ReadOnly<DroneTag>(),
             ComponentType.ReadOnly<LocalTransform>(),
             ComponentType.Exclude<DroneDisabled>());
+        allDronesQuery = entityManager.CreateEntityQuery(ComponentType.ReadOnly<DroneTag>());
         
-        var entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
         transfromTypeHandle = entityManager.GetComponentTypeHandle<LocalTransform>(true);
         cubeColorTypeHandle = entityManager.GetComponentTypeHandle<CubeColor>(true);
         
@@ -97,7 +101,6 @@ public class MoveDronesEntities : DroneSystemBase
             return;
         }
         
-        var entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
         transfromTypeHandle = entityManager.GetComponentTypeHandle<LocalTransform>(true);
         cubeColorTypeHandle = entityManager.GetComponentTypeHandle<CubeColor>(true);
 
@@ -111,12 +114,12 @@ public class MoveDronesEntities : DroneSystemBase
             var chunk = chunks[c];
             
             var transfroms = chunk.GetNativeArray(ref transfromTypeHandle);
-            // bool chunkHasCubeColor = chunk.Has(ref cubeColorTypeHandle);
-            // NativeArray<CubeColor> cubeColors = default;
-            // if (chunkHasCubeColor)
-            // {
-            //     cubeColors = chunk.GetNativeArray(ref cubeColorTypeHandle);
-            // }
+            bool chunkHasCubeColor = chunk.Has(ref cubeColorTypeHandle);
+            NativeArray<CubeColor> cubeColors = default;
+            if (chunkHasCubeColor)
+            {
+                cubeColors = chunk.GetNativeArray(ref cubeColorTypeHandle);
+            }
             int chunkEntityCount = chunk.Count;
             
             int entitiesToProcess = Math.Min(chunkEntityCount, maxEntitiesToRender - count);
@@ -131,19 +134,19 @@ public class MoveDronesEntities : DroneSystemBase
                     Vector4.one);
                 instData[count] = matrix;
 
-                // Vector4 color = defaultColor;
-                // if (chunkHasCubeColor)
-                // {
-                //     color = cubeColors[i].Value;
-                // }
-                // colorData[count] = color;
+                Vector4 color = defaultColor;
+                if (chunkHasCubeColor)
+                {
+                    color = cubeColors[i].Value;
+                }
+                colorData[count] = color;
                 
                 count++;
             }
         }
 
-        // propertyBlock.SetVectorArray("_BaseColor", colorData);
-        // rp.matProps = propertyBlock;
+        propertyBlock.SetVectorArray("_BaseColor", colorData);
+        rp.matProps = propertyBlock;
         
         if (count > 0)
         {
@@ -171,6 +174,11 @@ public class MoveDronesEntities : DroneSystemBase
         {
             entitiesQuery.Dispose();
         }
+        if (allDronesQuery != null && World.DefaultGameObjectInjectionWorld != null &&
+            World.DefaultGameObjectInjectionWorld.IsCreated)
+        {
+            allDronesQuery.Dispose();
+        }
 
         if (transfromMatrices.IsCreated)
         {
@@ -187,28 +195,13 @@ public class MoveDronesEntities : DroneSystemBase
         }
     }
 
-    public override void BuildNeighborRelations()
-    {
-        throw new NotImplementedException();
-    }
+    public override void BuildNeighborRelations() => drones.BuildNeighborRelations();
 
-    public override void ClearNeighborRelations()
-    {
-        throw new NotImplementedException();
-    }
+    public override void ClearNeighborRelations() => drones.ClearNeighborRelations();
 
-    public override void ClearAllColors()
-    {
-        throw new NotImplementedException();
-    }
+    public override void ClearAllColors() => drones.ClearAllColors();
 
-    public override void ClearHitCounters()
-    {
-        throw new NotImplementedException();
-    }
+    public override void ClearHitCounters() => drones.ClearHitCounters();
 
-    public override void GenerateHotspotGraph()
-    {
-        throw new NotImplementedException();
-    }
+    public override void GenerateHotspotGraph() => drones.GenerateHotspotGraph(defaultColor);
 }

@@ -18,7 +18,7 @@ namespace PGD.Drones
         };
         
         // 当前颜色索引
-        private int currentColorIndex = 0;
+        private int currentColorIndex;
         
         // 获取当前颜色的属性
         private Color CurrentTargetColor => targetColors[currentColorIndex];
@@ -121,8 +121,7 @@ namespace PGD.Drones
             var directNeighborRelations = entity.GetRelations<NeighborOf>();
             foreach (var directNeighborRelation in directNeighborRelations)
             {
-                var neighborEntity = directNeighborRelation.Target;
-                RecordHitCounts(neighborEntity);
+                RecordHitCounts(directNeighborRelation.Target);
             }
         }
 

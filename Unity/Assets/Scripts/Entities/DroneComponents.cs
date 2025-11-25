@@ -40,8 +40,22 @@ namespace Entities.Drones
 
         public CubeColor(Color color)
         {
-            // Value = new Vector4(color.r, color.g, color.b, color.a);
             Value = color;
         }
+    }
+
+    public struct ColorToBeUpdated : IComponentData
+    {
+    }
+
+    public struct HitCounter : IComponentData
+    {
+        public int counts;
+    }
+
+    public struct NeighborOf : IBufferElementData
+    {
+        public Entity Target;
+        public float Distance;
     }
 }

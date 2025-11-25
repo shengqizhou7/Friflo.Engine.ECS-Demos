@@ -131,71 +131,6 @@ namespace PGD.Drones
                 target.Value = System.Numerics.Vector3.Transform(v, rot);
             })); 
         }
-
-        // 切换实现方法/排布阵列时清理资源
-        public void CleanUp()
-        {
-            ClearNeighborRelations(); // 清除邻居关系
-            ClearAllColors(); // 清理颜色和颜色待更新标签
-            ClearHitCounters(); // 清除命中计数器lookup
-
-            // TODO: FindSystem的bool参数含义
-            // 删除颜色更新系统
-            var colorUpdateSystem = world.FindSystem<ColorUpdateSystem>(false);
-            if (colorUpdateSystem != null && colorUpdateSystem.Activated)
-            {
-                world.RemoveSystem(colorUpdateSystem);
-            }
-        }
-        
-        // 清除邻居关系
-        public void ClearNeighborRelations()
-        {
-            if (!NeighborManager.relationBuilt) return;
-            
-            int n = 0;
-            var queryRelation = world.QueryRelation<NeighborOf>();
-            queryRelation.ForEachEntity((ref NeighborOf neighborOf, IEntity entity) =>
-            {
-                entity.RemoveRelation<NeighborOf>(neighborOf.Target);
-                n++;
-            });
-            
-            Debug.Log($"清除了 {n} 个实体的邻居关系。残留 { world.QueryRelation<NeighborOf>().EntityCount } 个关系");
-            
-            NeighborManager.relationBuilt = false;
-            NeighborManager.UpdateHotSpotButtonState();
-        }
-
-        // 清除颜色组件和待更新颜色的标签
-        public void ClearAllColors()
-        {
-            var cq = world.GetCommandQueue();
-            // var queryColors = query.WithAllComponents(IComponents.Get<CubeColor>()); 
-            foreach (var entity in activeQuery.Entities)
-            {
-                // if (entity.HasComponent<CubeColor>() || entity.HasTag<ColorToBeUpdated>())
-                // {
-                    cq.RemoveComponent<CubeColor>(entity.Id);
-                    cq.RemoveTag<ColorToBeUpdated>(entity.Id);
-                // }
-            }
-            
-            Debug.Log($"清除了{activeQuery.EntityCount}个实体的CubeColor和ColorToBeUpdated");
-            cq.Apply();
-        }
-        
-        // 清除记录命中次数的Lookup组件
-        public void ClearHitCounters()
-        {
-            var cq = world.GetCommandQueue();
-            var hitQuery = world.Query<HitCounter>();
-            foreach (var entity in hitQuery.Entities)
-            {
-                cq.RemoveComponent<HitCounter>(entity.Id);
-            }
-            cq.Apply();
-        }
         
         // 建立邻居关系
         public void BuildNeighborRelations()
@@ -234,6 +169,25 @@ namespace PGD.Drones
             NeighborManager.relationBuilt = true; // 标志已建立邻居关系
             NeighborManager.UpdateHotSpotButtonState();
         }
+        
+        // 清除邻居关系
+        public void ClearNeighborRelations()
+        {
+            if (!NeighborManager.relationBuilt) return;
+            
+            int n = 0;
+            var queryRelation = world.QueryRelation<NeighborOf>();
+            queryRelation.ForEachEntity((ref NeighborOf neighborOf, IEntity entity) =>
+            {
+                entity.RemoveRelation<NeighborOf>(neighborOf.Target);
+                n++;
+            });
+            
+            Debug.Log($"清除了 {n} 个实体的邻居关系。残留 { world.QueryRelation<NeighborOf>().EntityCount } 个关系");
+            
+            NeighborManager.relationBuilt = false;
+            NeighborManager.UpdateHotSpotButtonState();
+        }
 
         // 生成命中热点图
         public void GenerateHotspotGraph()
@@ -266,6 +220,52 @@ namespace PGD.Drones
             }
             
             cq.Apply();
+        }
+
+        // 清除颜色组件和待更新颜色的标签
+        public void ClearAllColors()
+        {
+            var cq = world.GetCommandQueue();
+            // var queryColors = query.WithAllComponents(IComponents.Get<CubeColor>()); 
+            foreach (var entity in activeQuery.Entities)
+            {
+                // if (entity.HasComponent<CubeColor>() || entity.HasTag<ColorToBeUpdated>())
+                // {
+                cq.RemoveComponent<CubeColor>(entity.Id);
+                cq.RemoveTag<ColorToBeUpdated>(entity.Id);
+                // }
+            }
+            
+            Debug.Log($"清除了{activeQuery.EntityCount}个实体的CubeColor和ColorToBeUpdated");
+            cq.Apply();
+        }
+        
+        // 清除记录命中次数的Lookup组件
+        public void ClearHitCounters()
+        {
+            var cq = world.GetCommandQueue();
+            var hitQuery = world.Query<HitCounter>();
+            foreach (var entity in hitQuery.Entities)
+            {
+                cq.RemoveComponent<HitCounter>(entity.Id);
+            }
+            cq.Apply();
+        }
+        
+        // 切换实现方法/排布阵列时清理资源
+        public void CleanUp()
+        {
+            ClearNeighborRelations(); // 清除邻居关系
+            ClearAllColors(); // 清理颜色和颜色待更新标签
+            ClearHitCounters(); // 清除命中计数器lookup
+
+            // TODO: FindSystem的bool参数含义
+            // 删除颜色更新系统
+            var colorUpdateSystem = world.FindSystem<ColorUpdateSystem>(false);
+            if (colorUpdateSystem != null && colorUpdateSystem.Activated)
+            {
+                world.RemoveSystem(colorUpdateSystem);
+            }
         }
     }
 }

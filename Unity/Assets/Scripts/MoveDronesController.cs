@@ -43,6 +43,12 @@ public class MoveDronesController : MonoBehaviour
             {
                 EntitiesSystem.Enabled = false;
             }
+            
+            var colorPropagationSystem = world.GetOrCreateSystemManaged<Entities.Drones.ColorPropagationSystem>();
+            if (colorPropagationSystem != null)
+            {
+                colorPropagationSystem.Enabled = false;
+            }
         }
     }
 
