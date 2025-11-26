@@ -5,7 +5,7 @@ using UnityEngine.EventSystems;
 namespace PGD.Drones
 {
     [DisableAutoRegister]
-    public class ColorUpdateSystem : PGDSystem<PGDTransform, PGDPosition, Start, Target>
+    public class ColorPropagationSystem : PGDSystem<PGDTransform, PGDPosition, Start, Target>
     {
         // 颜色列表
         public Color[] targetColors = 
@@ -26,7 +26,6 @@ namespace PGD.Drones
         // 正在传播的颜色（当传播进行中时，保持不变）
         private Color? propagatingColor;
     
-        // private IECSWorld world = PGDGameContext.GetWorld();
         private CommandQueue cq;
         private IQuery queryColorToBeUpdated;
         private IQuery<NeighborOf> queryRelation;
@@ -42,7 +41,7 @@ namespace PGD.Drones
         
         protected override void OnUpdate()
         {
-            // Debug.Log("ColorUpdateSystem update");
+            // Debug.Log("PGD ColorUpdateSystem running");
             if (Input.GetMouseButtonDown(0))
             {
                 if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
@@ -53,7 +52,7 @@ namespace PGD.Drones
                 Debug.Log("点击了鼠标");
                 
                 // 不使用 Physics.Raycast（因为 Instanced 渲染没有 Collider）
-                // 改用数学方法：计算射线与所有实体的最近距离
+                // 使用数学方法计算射线与所有实体的最近距离
                 Ray ray = UnityEngine.Camera.main.ScreenPointToRay(Input.mousePosition);
                 IEntity clickedEntity = FindNearestEntityOnRay(ray);
                 

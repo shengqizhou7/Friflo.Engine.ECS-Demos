@@ -2,6 +2,7 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
+using UnityEngine;
 
 namespace Entities.Drones
 {
@@ -13,6 +14,7 @@ namespace Entities.Drones
         
         protected override void OnUpdate()
         {
+            // Debug.Log("DOTS DroneUpdateSystem running");
             s_GlobalTime += World.Time.DeltaTime;
             float deltaTime = World.Time.DeltaTime * 1000f;
             var query = SystemAPI.QueryBuilder()

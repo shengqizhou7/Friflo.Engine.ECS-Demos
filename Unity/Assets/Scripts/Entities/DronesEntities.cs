@@ -85,7 +85,7 @@ namespace Entities.Drones
 
         public void SetEntityCount(int count)
         {
-            CleanUp();
+            CleanupWithinEntities();
             NativeArray<Entity> entities = allDronesQuery.ToEntityArray(Allocator.Temp);
 
             for (int i = 0; i < entities.Length; i++)
@@ -117,10 +117,15 @@ namespace Entities.Drones
             return activeDronesQuery.ToEntityArray(allocator);
         }
 
+        public void SetStart(float duration)
+        {
+            this.duration = duration;
+            CleanupWithinEntities();
+        }
+
         public void SetTargetPlane(float duration, float distance)
         { 
-            CleanUp();
-            this.duration = duration;
+            SetStart(duration);
             
             NativeArray<Entity> entities = activeDronesQuery.ToEntityArray(Allocator.Temp);
             int entityCount = entities.Length;
@@ -132,8 +137,7 @@ namespace Entities.Drones
 
         public void SetTargetCube(float duration, float distance)
         {
-            CleanUp();
-            this.duration = duration;
+            SetStart(duration);
             
             NativeArray<Entity> entities = activeDronesQuery.ToEntityArray(Allocator.Temp);
             int entityCount = entities.Length;
@@ -145,8 +149,7 @@ namespace Entities.Drones
         
         internal void SetTargetRings(float duration, int ringCnt, float distance, int ringLayers)
         {
-            CleanUp();
-            this.duration = duration;
+            SetStart(duration);
 
             if (ringLayers <= 1)
             {
@@ -246,11 +249,10 @@ namespace Entities.Drones
                 int hits = hitData[i].counts;
                 Color color = hits switch
                 {
-                    1 => new Color(0.0f, 0.55f, 0.25f, 1f),
-                    >= 2 and <= 3 => new Color(0.95f, 0.78f, 0.15f, 1f),
-                    >= 4 and <= 6 => new Color(1.0f, 0.42f, 0.1f, 1f),
-                    >= 7 => new Color(0.95f, 0.08f, 0.0f, 1f),
-                    _ => defaultColor
+                    1 => new Color(0.95f, 0.78f, 0.15f, 1f),
+                    >= 2 and <= 3 => new Color(1.0f, 0.42f, 0.1f, 1f),
+                    >= 4 => new Color(0.95f, 0.08f, 0.0f, 1f),
+                    _ => new Color(0.25f, 0.25f, 0.25f, 1f)
                 };
                 entityManager.SetComponentData(entity, new CubeColor(color));
             }
@@ -283,7 +285,7 @@ namespace Entities.Drones
             }
         }
 
-        public void CleanUp()
+        public void CleanupWithinEntities()
         {
             ClearNeighborRelations(); // 清除邻居关系
             ClearAllColors(); // 清理颜色和颜色待更新标签
@@ -298,6 +300,23 @@ namespace Entities.Drones
                 }
             }
         }
-    }
 
+        public void CleanupOnSwitchImpl()
+        {
+            CleanupWithinEntities();
+            entityManager.DestroyEntity(allDronesQuery);
+
+            if (world != null)
+            {
+                if (activeDronesQuery != null) activeDronesQuery.Dispose();
+                if (allDronesQuery != null) allDronesQuery.Dispose();
+                
+                var droneUpdateSystem = world.GetOrCreateSystemManaged<DroneUpdateSystem>();
+                if (droneUpdateSystem != null)
+                {
+                    droneUpdateSystem.Enabled = false;
+                }
+            }
+        }
+    }
 }

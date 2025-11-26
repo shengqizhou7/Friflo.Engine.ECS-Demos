@@ -26,7 +26,6 @@ namespace Entities.Drones
         private int _currentColorIndex;
         private Color CurrentTargetColor => targetColors[_currentColorIndex];
         private Color? _propagatingColor;
-        // private EntityCommandBuffer _ecb;
 
         protected override void OnCreate()
         {
@@ -39,11 +38,11 @@ namespace Entities.Drones
                 ComponentType.ReadOnly<ColorToBeUpdated>(),
                 ComponentType.ReadOnly<NeighborOf>());
             RequireForUpdate(_droneQuery);
-            // _ecb = new EntityCommandBuffer(Allocator.Persistent);
         }
 
         protected override void OnUpdate()
         {
+            // Debug.Log("DOTS ColorPropagationSystem running");
             if (Input.GetMouseButtonDown(0))
             {
                 if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
@@ -75,8 +74,7 @@ namespace Entities.Drones
                 }
             }
         }
-
-
+        
         private void SelectEntity(Entity entity)
         {
             if (!_propagatingColor.HasValue)
@@ -118,16 +116,10 @@ namespace Entities.Drones
             ecb.Dispose();
 
             RecordHitCounts(entity);
-            // var neighbors = _entityManager.GetBuffer<NeighborOf>(entity);
-            // foreach (var neighbor in neighbors)
-            // {
-            //     RecordHitCounts(neighbor.Target);
-            // }
             foreach (var neighborEntity in neighborEntities)
             {
                 RecordHitCounts(neighborEntity);
             }
-            
             neighborEntities.Dispose();
         }
 
@@ -146,7 +138,6 @@ namespace Entities.Drones
 
         private void UpdateNeighborColors(Color color)
         {
-            // using var entities = _colorUpdateQuery.ToEntityArray(Allocator.Temp);
             var ecb = new EntityCommandBuffer(Allocator.Temp);
             foreach (var entity in _colorUpdateQuery.ToEntityArray(Allocator.Temp))
             {
@@ -199,7 +190,6 @@ namespace Entities.Drones
                     nearest = entity;
                 }
             }
-
             return nearest;
         }
         

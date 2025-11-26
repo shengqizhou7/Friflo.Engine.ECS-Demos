@@ -9,7 +9,8 @@ using Unity.Entities;
 public enum ImplementationType
 {
     PGD,
-    Entities
+    Entities,
+    OOP
 }
 
 public class MoveDronesController : MonoBehaviour
@@ -20,7 +21,7 @@ public class MoveDronesController : MonoBehaviour
     [SerializeField] protected Mesh mesh;
     
     [Header("实现选择")]
-    [SerializeField] private ImplementationType implementationType = ImplementationType.Entities;
+    [SerializeField] public static ImplementationType implementationType;
     
     public static IDroneSystem _currentSystem;
 

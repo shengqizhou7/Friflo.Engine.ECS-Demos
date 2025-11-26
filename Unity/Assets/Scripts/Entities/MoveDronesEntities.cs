@@ -20,7 +20,6 @@ public class MoveDronesEntities : DroneSystemBase
     public Color defaultColor = Color.gray;
     
     private EntityQuery entitiesQuery; 
-    private EntityQuery allDronesQuery;
     private ComponentTypeHandle<LocalTransform> transfromTypeHandle;
     private ComponentTypeHandle<CubeColor> cubeColorTypeHandle;
     private EntityManager entityManager;
@@ -32,6 +31,7 @@ public class MoveDronesEntities : DroneSystemBase
         entityCount = 1024;
         drones = new DronesEntities();
         Debug.Log($"初始化前DOTS世界中的总实体数: {World.DefaultGameObjectInjectionWorld.EntityManager.UniversalQuery.CalculateEntityCount()}");
+        Debug.Log($"初始化前PGD世界中的总实体数: {PGDGameContext.GetWorld().Query().EntityCount}");
         drones.Initialize();
         drones.SetEntityCount(entityCount);
         drones.SetTargetPlane(500, 1.2f);
@@ -54,7 +54,6 @@ public class MoveDronesEntities : DroneSystemBase
             ComponentType.ReadOnly<DroneTag>(),
             ComponentType.ReadOnly<LocalTransform>(),
             ComponentType.Exclude<DroneDisabled>());
-        allDronesQuery = entityManager.CreateEntityQuery(ComponentType.ReadOnly<DroneTag>());
         
         transfromTypeHandle = entityManager.GetComponentTypeHandle<LocalTransform>(true);
         cubeColorTypeHandle = entityManager.GetComponentTypeHandle<CubeColor>(true);
@@ -167,6 +166,7 @@ public class MoveDronesEntities : DroneSystemBase
         UpdateFps();
     }
 
+    // 切换实现时触发
     public override void CleanupResources()
     {
         if (entitiesQuery != null && World.DefaultGameObjectInjectionWorld != null &&
@@ -174,25 +174,13 @@ public class MoveDronesEntities : DroneSystemBase
         {
             entitiesQuery.Dispose();
         }
-        if (allDronesQuery != null && World.DefaultGameObjectInjectionWorld != null &&
-            World.DefaultGameObjectInjectionWorld.IsCreated)
-        {
-            allDronesQuery.Dispose();
-        }
 
         if (transfromMatrices.IsCreated)
         {
             transfromMatrices.Dispose();
         }
 
-        if (World.DefaultGameObjectInjectionWorld != null)
-        {
-            var system = World.DefaultGameObjectInjectionWorld.GetOrCreateSystemManaged<DroneUpdateSystem>();
-            if (system != null)
-            {
-                system.Enabled = false;
-            }
-        }
+        drones.CleanupOnSwitchImpl();
     }
 
     public override void BuildNeighborRelations() => drones.BuildNeighborRelations();

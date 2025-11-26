@@ -21,7 +21,7 @@ namespace PGD.Drones
 
         protected override void OnUpdate()
         {
-            // Debug.Log("DroneUpdateTransformSystem running");
+            // Debug.Log("PGD DroneUpdateTransformSystem running");
             s_GlobalTime += Time.deltaTime;
             Elapsed += Time.deltaTime * 1000;
             var complete = Math.Min(Elapsed / Duration, 1);

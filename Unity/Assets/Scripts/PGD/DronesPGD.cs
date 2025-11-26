@@ -52,7 +52,7 @@ namespace PGD.Drones
 
         public void SetEntityCount(int count)
         {
-            CleanUp();
+            CleanupWithinPGD();
             
             int i = 0;
             int n = 0;
@@ -81,7 +81,7 @@ namespace PGD.Drones
                 start.Value = position.vec3;
             });
             
-            CleanUp(); // TODO: 增减cube数量时，由于会先调用SetEntityCount，CleanUp会调用两次
+            CleanupWithinPGD(); // TODO: 增减cube数量时，由于会先调用SetEntityCount，CleanUp会调用两次
         }
 
         public void SetTargetPlane(float duration, float distance)
@@ -165,7 +165,7 @@ namespace PGD.Drones
             }
             Debug.Log($"共 {activeQuery.Entities.Count} 个实体建立了邻居关系，当前共有 {world.QueryRelation<NeighborOf>().EntityCount} 条关系");
             
-            world.RegisterSystem(new ColorUpdateSystem()); // 玩家点击添加关系按钮时注册颜色变换系统
+            world.RegisterSystem(new ColorPropagationSystem()); // 玩家点击添加关系按钮时注册颜色变换系统
             NeighborManager.relationBuilt = true; // 标志已建立邻居关系
             NeighborManager.UpdateHotSpotButtonState();
         }
@@ -252,8 +252,8 @@ namespace PGD.Drones
             cq.Apply();
         }
         
-        // 切换实现方法/排布阵列时清理资源
-        public void CleanUp()
+        // PGD实现内，切换排布阵列/增删实体时清理资源
+        public void CleanupWithinPGD()
         {
             ClearNeighborRelations(); // 清除邻居关系
             ClearAllColors(); // 清理颜色和颜色待更新标签
@@ -261,10 +261,23 @@ namespace PGD.Drones
 
             // TODO: FindSystem的bool参数含义
             // 删除颜色更新系统
-            var colorUpdateSystem = world.FindSystem<ColorUpdateSystem>(false);
+            var colorUpdateSystem = world.FindSystem<ColorPropagationSystem>(false);
             if (colorUpdateSystem != null && colorUpdateSystem.Activated)
             {
                 world.RemoveSystem(colorUpdateSystem);
+            }
+        }
+
+        // 切换实现方式时清理资源
+        public void CleanupOnSwitchImpl()
+        {
+            CleanupWithinPGD();
+            world.DestroyEntity(allQuery); // 清理PGD实体
+            
+            var droneUpdateTransformSystem = world.FindSystem<DroneUpdateTransformSystem>(false);
+            if (droneUpdateTransformSystem != null && droneUpdateTransformSystem.Activated)
+            {
+                world.RemoveSystem(droneUpdateTransformSystem);
             }
         }
     }
