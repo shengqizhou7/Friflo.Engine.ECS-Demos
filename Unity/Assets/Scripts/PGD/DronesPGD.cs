@@ -109,7 +109,7 @@ namespace PGD.Drones
             int x = 0, n = 0;
             targetQuery.ForEachEntity((ref Target target, IEntity entity) => {
                 target.Value.X = distance * x - offset;
-                target.Value.Y = distance * ((n++ / edgeCount2) % edgeCount) - distance - offset;
+                target.Value.Y = distance * ((n / edgeCount2) % edgeCount) - distance - offset;
                 target.Value.Z = distance * ((n++ / edgeCount) % edgeCount) - offset;
                 x = (x + 1) % edgeCount;
             });

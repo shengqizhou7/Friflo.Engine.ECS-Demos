@@ -105,7 +105,41 @@ namespace Entities.Drones
 
         public static void SetTargetCube(EntityManager entityManager, int entityCount, float duration)
         {
+            int edgeCount = (int)math.pow(entityCount, 1.0f / 3.0f);
+            int edgeCount2 = edgeCount * edgeCount;
+            float distance = 1.2f;
+            float offset = distance * edgeCount / 2;
             
+            var activeQuery = entityManager.CreateEntityQuery(ComponentType.ReadOnly<DroneTag>(),
+                ComponentType.Exclude<DroneDisabled>());
+            
+            var entities = activeQuery.ToEntityArray(Allocator.Temp);
+            ;
+            int activeCount = math.min(entities.Length, entityCount);
+
+            for (int i = 0; i < activeCount; i++)
+            {
+                Entity entity = entities[i];
+                float3 currentPos = float3.zero;
+                if (entityManager.HasComponent<LocalTransform>(entity))
+                {
+                    var transform = entityManager.GetComponentData<LocalTransform>(entity);
+                    currentPos = transform.Position;
+                }
+                
+                int x = i % edgeCount;
+                int y = (i / edgeCount2) % edgeCount;
+                int z = (i / edgeCount) % edgeCount;
+                float3 targetPos = new float3(
+                    distance * x - offset,
+                    distance * y - distance - offset,
+                    distance * z - offset);
+                
+                entityManager.SetComponentData(entity, new DroneStart { Value = currentPos });
+                entityManager.SetComponentData(entity, new DroneTarget { Value = targetPos });
+                entityManager.SetComponentData(entity, new DroneAnimation { Duration = duration, Elapsed = 0 });
+            }
+            entities.Dispose();
         }
 
         public static void SetTargetRing(EntityManager entityManager, int entityCount, float duration)
