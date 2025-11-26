@@ -168,13 +168,13 @@ namespace Entities.Drones
 
         public void BuildNeighborRelations()
         {
-            if (NeighborManager.relationBuilt) return;
+            if (NeighborController.relationBuilt) return;
 
             ClearNeighborRelations();
 
             using var entities = activeDronesQuery.ToEntityArray(Allocator.Temp);
             using var transforms = activeDronesQuery.ToComponentDataArray<LocalTransform>(Allocator.Temp);
-            float neighborDistanceSq = NeighborManager.neighborDistance * NeighborManager.neighborDistance;
+            float neighborDistanceSq = NeighborController.neighborDistance * NeighborController.neighborDistance;
 
             for (int i = 0; i < entities.Length; i++)
             {
@@ -191,7 +191,7 @@ namespace Entities.Drones
                     Vector3 posB = transforms[j].Position;
                     float distance = Vector3.Distance(posA, posB);
                     
-                    if (distance <= NeighborManager.neighborDistance)
+                    if (distance <= NeighborController.neighborDistance)
                     {
                         buffer.Add(new NeighborOf { Target = entities[j], Distance = distance });
                     }
@@ -208,8 +208,8 @@ namespace Entities.Drones
                 }
             }
             
-            NeighborManager.relationBuilt = true;
-            NeighborManager.UpdateHotSpotButtonState();
+            NeighborController.relationBuilt = true;
+            NeighborController.UpdateHotSpotButtonState();
         }
 
         public void ClearNeighborRelations()
@@ -223,8 +223,8 @@ namespace Entities.Drones
                 }
             }
 
-            NeighborManager.relationBuilt = false;
-            NeighborManager.UpdateHotSpotButtonState();
+            NeighborController.relationBuilt = false;
+            NeighborController.UpdateHotSpotButtonState();
         }
 
         public void GenerateHotspotGraph(Color defaultColor)

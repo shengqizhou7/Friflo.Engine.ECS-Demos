@@ -1,4 +1,3 @@
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -138,7 +137,7 @@ namespace PGD.Drones
             });
             cq.Apply();
         }
-
+        
         private IEntity FindNearestEntityOnRay(Ray ray)
         {
             var query = GetQuery();
@@ -182,7 +181,7 @@ namespace PGD.Drones
 
             return nearest;
         }
-
+        
         private void RecordHitCounts(IEntity entity)
         {
             if (!entity.HasComponent<HitCounter>())

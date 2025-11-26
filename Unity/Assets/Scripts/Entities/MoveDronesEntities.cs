@@ -191,5 +191,5 @@ public class MoveDronesEntities : DroneSystemBase
 
     public override void ClearHitCounters() => drones.ClearHitCounters();
 
-    public override void GenerateHotspotGraph() => drones.GenerateHotspotGraph(defaultColor);
+    public override void PlotHotspotGraph() => drones.GenerateHotspotGraph(defaultColor);
 }

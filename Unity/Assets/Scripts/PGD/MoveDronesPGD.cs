@@ -2,7 +2,6 @@ using System;
 using PGD;
 using PGD.Drones;
 using UnityEngine;
-using UnityEngine.Assertions.Must;
 
 public class MoveDronesPGD : DroneSystemBase
 {
@@ -129,5 +128,5 @@ public class MoveDronesPGD : DroneSystemBase
 
     public override void ClearHitCounters() => drones.ClearHitCounters();
 
-    public override void GenerateHotspotGraph() => drones.GenerateHotspotGraph();
+    public override void PlotHotspotGraph() => drones.PlotHotspotGraph();
 }

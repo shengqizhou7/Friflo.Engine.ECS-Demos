@@ -1,7 +1,6 @@
 using UnityEngine;
 using System;
 using System.Collections;
-using PGD.Drones;
 using TMPro;
 using UnityEngine.UI;
 using Unity.Entities;
@@ -66,7 +65,7 @@ public class MoveDronesController : MonoBehaviour
         _currentSystem = DroneSystemFactory.CreateSystem(newType, gameObject);
         InitializeSystem(_currentSystem);
         _currentSystem.EnableSystem();
-        NeighborManager._currentSystem =  _currentSystem;
+        NeighborController._currentSystem =  _currentSystem;
     }
 
     private void InitializeSystem(IDroneSystem system)

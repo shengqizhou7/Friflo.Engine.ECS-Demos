@@ -135,7 +135,7 @@ namespace PGD.Drones
         // 建立邻居关系
         public void BuildNeighborRelations()
         {
-            if (NeighborManager.relationBuilt) return;
+            if (NeighborController.relationBuilt) return;
             
             ClearNeighborRelations();
 
@@ -157,7 +157,7 @@ namespace PGD.Drones
 
                     float distance = Vector3.Distance(posA, posB);
 
-                    if (distance <= NeighborManager.neighborDistance)
+                    if (distance <= NeighborController.neighborDistance)
                     {
                         entityA.AddRelation(new NeighborOf { Target = entityB, Distance = distance }, out _);
                     }
@@ -166,14 +166,14 @@ namespace PGD.Drones
             Debug.Log($"共 {activeQuery.Entities.Count} 个实体建立了邻居关系，当前共有 {world.QueryRelation<NeighborOf>().EntityCount} 条关系");
             
             world.RegisterSystem(new ColorPropagationSystem()); // 玩家点击添加关系按钮时注册颜色变换系统
-            NeighborManager.relationBuilt = true; // 标志已建立邻居关系
-            NeighborManager.UpdateHotSpotButtonState();
+            NeighborController.relationBuilt = true; // 标志已建立邻居关系
+            NeighborController.UpdateHotSpotButtonState();
         }
         
         // 清除邻居关系
         public void ClearNeighborRelations()
         {
-            if (!NeighborManager.relationBuilt) return;
+            if (!NeighborController.relationBuilt) return;
             
             int n = 0;
             var queryRelation = world.QueryRelation<NeighborOf>();
@@ -185,12 +185,12 @@ namespace PGD.Drones
             
             Debug.Log($"清除了 {n} 个实体的邻居关系。残留 { world.QueryRelation<NeighborOf>().EntityCount } 个关系");
             
-            NeighborManager.relationBuilt = false;
-            NeighborManager.UpdateHotSpotButtonState();
+            NeighborController.relationBuilt = false;
+            NeighborController.UpdateHotSpotButtonState();
         }
 
         // 生成命中热点图
-        public void GenerateHotspotGraph()
+        public void PlotHotspotGraph()
         {
             var cq = world.GetCommandQueue();
             
@@ -226,14 +226,10 @@ namespace PGD.Drones
         public void ClearAllColors()
         {
             var cq = world.GetCommandQueue();
-            // var queryColors = query.WithAllComponents(IComponents.Get<CubeColor>()); 
             foreach (var entity in activeQuery.Entities)
             {
-                // if (entity.HasComponent<CubeColor>() || entity.HasTag<ColorToBeUpdated>())
-                // {
                 cq.RemoveComponent<CubeColor>(entity.Id);
                 cq.RemoveTag<ColorToBeUpdated>(entity.Id);
-                // }
             }
             
             Debug.Log($"清除了{activeQuery.EntityCount}个实体的CubeColor和ColorToBeUpdated");
@@ -251,6 +247,7 @@ namespace PGD.Drones
             }
             cq.Apply();
         }
+
         
         // PGD实现内，切换排布阵列/增删实体时清理资源
         public void CleanupWithinPGD()

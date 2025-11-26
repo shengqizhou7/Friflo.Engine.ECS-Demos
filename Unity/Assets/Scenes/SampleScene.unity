@@ -812,7 +812,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: HotSpot
+  m_text: Hotspot
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -1267,7 +1267,7 @@ GameObject:
   - component: {fileID: 353551160}
   m_Layer: 5
   m_HasEditorInfo: 1
-  m_Name: HotSpot
+  m_Name: Hotspot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1339,7 +1339,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 878860814}
         m_TargetAssemblyTypeName: PGD.Drones.NeighborManager, Assembly-CSharp
-        m_MethodName: GenerateHotspotGraph
+        m_MethodName: PlotHotspotGraph
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
