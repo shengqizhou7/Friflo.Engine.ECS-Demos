@@ -12,10 +12,8 @@ public class MoveDronesPGD : DroneSystemBase
     private RenderParams rp;
     private Matrix4x4[] instData;
     private Vector4[] colorData;
-
     private MaterialPropertyBlock propertyBlock;
-    
-    public Color defaultColor = Color.gray;
+    private Color defaultColor = Color.gray;
     
     void Start()
     {
@@ -115,11 +113,6 @@ public class MoveDronesPGD : DroneSystemBase
         // }
     }
 
-    public override void CleanupResources()
-    {
-        drones.CleanupOnSwitchImpl();
-    }
-
     public override void BuildNeighborRelations() => drones.BuildNeighborRelations();
 
     public override void ClearNeighborRelations() => drones.ClearNeighborRelations();
@@ -129,4 +122,6 @@ public class MoveDronesPGD : DroneSystemBase
     public override void ClearHitCounters() => drones.ClearHitCounters();
 
     public override void PlotHotspotGraph() => drones.PlotHotspotGraph();
+    
+    public override void CleanupResources() => drones.CleanupOnSwitchImpl();
 }

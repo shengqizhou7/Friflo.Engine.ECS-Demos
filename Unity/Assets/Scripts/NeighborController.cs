@@ -1,4 +1,3 @@
-using PGD;
 using UnityEngine;
 using UnityEngine.UI; 
 
@@ -11,7 +10,6 @@ public class NeighborController : MonoBehaviour
     [SerializeField] private Button hotSpotButton;
     [SerializeField] private Button relationButton;
 
-    private IEntity selectedEntity;
     public static IDroneSystem _currentSystem;
 
     private void Awake()

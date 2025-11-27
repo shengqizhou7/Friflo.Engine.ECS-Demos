@@ -17,7 +17,7 @@ public class MoveDronesEntities : DroneSystemBase
     private Matrix4x4[] instData;
     private Vector4[] colorData;
     private MaterialPropertyBlock propertyBlock;
-    public Color defaultColor = Color.gray;
+    private Color defaultColor = Color.gray;
     
     private EntityQuery entitiesQuery; 
     private ComponentTypeHandle<LocalTransform> transfromTypeHandle;
@@ -166,6 +166,16 @@ public class MoveDronesEntities : DroneSystemBase
         UpdateFps();
     }
 
+    public override void BuildNeighborRelations() => drones.BuildNeighborRelations();
+
+    public override void ClearNeighborRelations() => drones.ClearNeighborRelations();
+
+    public override void ClearAllColors() => drones.ClearAllColors();
+
+    public override void ClearHitCounters() => drones.ClearHitCounters();
+
+    public override void PlotHotspotGraph() => drones.GenerateHotspotGraph(defaultColor);
+    
     // 切换实现时触发
     public override void CleanupResources()
     {
@@ -182,14 +192,4 @@ public class MoveDronesEntities : DroneSystemBase
 
         drones.CleanupOnSwitchImpl();
     }
-
-    public override void BuildNeighborRelations() => drones.BuildNeighborRelations();
-
-    public override void ClearNeighborRelations() => drones.ClearNeighborRelations();
-
-    public override void ClearAllColors() => drones.ClearAllColors();
-
-    public override void ClearHitCounters() => drones.ClearHitCounters();
-
-    public override void PlotHotspotGraph() => drones.GenerateHotspotGraph(defaultColor);
 }

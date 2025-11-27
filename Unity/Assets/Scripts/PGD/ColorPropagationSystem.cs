@@ -7,7 +7,7 @@ namespace PGD.Drones
     public class ColorPropagationSystem : PGDSystem<PGDTransform, PGDPosition, Start, Target>
     {
         // 颜色列表
-        public Color[] targetColors = 
+        private Color[] targetColors = 
         {
             new (0.2f, 0.8f, 0.9f, 1f),
             new (1.0f, 0.4f, 0.4f, 1f),
@@ -55,7 +55,7 @@ namespace PGD.Drones
                 Ray ray = UnityEngine.Camera.main.ScreenPointToRay(Input.mousePosition);
                 IEntity clickedEntity = FindNearestEntityOnRay(ray);
                 
-                if (clickedEntity != null && !clickedEntity.IsDeleted())
+                if (!clickedEntity.IsDeleted())
                 {
                     Debug.Log($"选中了实体 ID: {clickedEntity.Id}，当前颜色: {CurrentTargetColor}");
                     
@@ -87,7 +87,7 @@ namespace PGD.Drones
             }
         }
         
-        public void SelectEntity(IEntity entity)
+        private void SelectEntity(IEntity entity)
         {
             if (!propagatingColor.HasValue)
             {
@@ -123,7 +123,7 @@ namespace PGD.Drones
             }
         }
 
-        public void updateNeighborColors(Color color)
+        private void updateNeighborColors(Color color)
         {
             queryRelation.ForEachEntity((ref NeighborOf neighborOf, IEntity entity) =>
             {
@@ -160,18 +160,18 @@ namespace PGD.Drones
                     trans.mtr.Translation.Z
                 );
 
-                Vector3 toPoint = entityPos - origin;
-                float alongRay = Vector3.Dot(toPoint, direction);
+                Vector3 toPoint = entityPos - origin; // 实体中心相对射线起点的向量
+                float alongRay = Vector3.Dot(toPoint, direction); // 实体中心在射线方向上的投影距离
                 if (alongRay < 0f) continue; // 在相机后方
 
-                Vector3 closestPoint = origin + direction * alongRay;
-                float perpDistance = Vector3.Distance(closestPoint, entityPos);
+                Vector3 closestPoint = origin + direction * alongRay; // 射线上距离实体最近的点
+                float perpDistance = Vector3.Distance(closestPoint, entityPos); // 实体中心到射线上最近点的距离
 
                 // 根据深度扩展容差，越远的实体允许稍大的偏差
                 float dynamicRadius = cubeRadius + alongRay * 0.01f;
                 if (perpDistance > dynamicRadius) continue;
 
-                float score = perpDistance + alongRay * depthBias;
+                float score = perpDistance + alongRay * depthBias; // 优先挑选离镜头近的实体
                 if (score < bestScore)
                 {
                     bestScore = score;
