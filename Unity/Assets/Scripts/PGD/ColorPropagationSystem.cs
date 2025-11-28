@@ -15,15 +15,9 @@ namespace PGD.Drones
             new (0.3f, 0.9f, 0.4f, 1f),
             new (1.0f, 0.85f, 0.2f, 1f)
         };
-        
-        // 当前颜色索引
-        private int currentColorIndex;
-        
-        // 获取当前颜色的属性
-        private Color CurrentTargetColor => targetColors[currentColorIndex];
-        
-        // 正在传播的颜色（当传播进行中时，保持不变）
-        private Color? propagatingColor;
+        private int currentColorIndex; // 当前颜色索引
+        private Color CurrentTargetColor => targetColors[currentColorIndex]; // 获取当前颜色的属性
+        private Color? propagatingColor; // 正在传播的颜色（当传播进行中时，保持不变）
     
         private CommandQueue cq;
         private IQuery queryColorToBeUpdated;
@@ -50,8 +44,7 @@ namespace PGD.Drones
                 
                 Debug.Log("点击了鼠标");
                 
-                // 不使用 Physics.Raycast（因为 Instanced 渲染没有 Collider）
-                // 使用数学方法计算射线与所有实体的最近距离
+                // Instanced 渲染没有 Collider, 使用数学方法计算射线与所有实体的最近距离
                 Ray ray = UnityEngine.Camera.main.ScreenPointToRay(Input.mousePosition);
                 IEntity clickedEntity = FindNearestEntityOnRay(ray);
                 
@@ -72,18 +65,21 @@ namespace PGD.Drones
                     Debug.Log("没有找到实体");
                 }
             }
-            
+
             // 当有颜色正在传播时，继续更新邻居颜色
-            if (propagatingColor.HasValue && !queryColorToBeUpdated.IsEmpty())
+            if (propagatingColor.HasValue)
             {
-                updateNeighborColors(propagatingColor.Value);
-                Debug.Log($"剩余{queryColorToBeUpdated.EntityCount}个方块待染色，传播颜色: {propagatingColor.Value}");
-            }
-            else if (propagatingColor.HasValue && queryColorToBeUpdated.IsEmpty())
-            {
-                // 传播完成，清除传播颜色
-                Debug.Log($"颜色传播完成: {propagatingColor.Value}");
-                propagatingColor = null;
+                if (!queryColorToBeUpdated.IsEmpty())
+                {
+                    UpdateNeighborColors(propagatingColor.Value);
+                    Debug.Log($"剩余{queryColorToBeUpdated.EntityCount}个方块待染色，传播颜色: {propagatingColor.Value}");
+                }
+                else if (queryColorToBeUpdated.IsEmpty())
+                {
+                    // 传播完成，清除传播颜色
+                    Debug.Log($"颜色传播完成: {propagatingColor.Value}");
+                    propagatingColor = null;
+                }
             }
         }
         
@@ -112,7 +108,6 @@ namespace PGD.Drones
             }
             cq.Apply();
             entity.RemoveTag<ColorToBeUpdated>();
-            Debug.Log($"给{GetQuery().EntityCount - 1}个实体添加了ColorToBeUpdated");
 
             // 该区域cube更新命中次数
             RecordHitCounts(entity);
@@ -123,7 +118,7 @@ namespace PGD.Drones
             }
         }
 
-        private void updateNeighborColors(Color color)
+        private void UpdateNeighborColors(Color color)
         {
             queryRelation.ForEachEntity((ref NeighborOf neighborOf, IEntity entity) =>
             {
@@ -146,8 +141,8 @@ namespace PGD.Drones
             Vector3 origin = ray.origin;
             Vector3 direction = ray.direction.normalized;
 
-            const float cubeRadius = 0.6f;              // 方块半径（米），根据阵列大小可调
-            const float depthBias = 1f;             // 深度权重，越靠近摄像机权重越高
+            const float cubeRadius = 0.6f; // 方块半径（米），根据阵列大小可调
+            const float depthBias = 1f; // 深度权重，越靠近摄像机权重越高
 
             float bestScore = float.MaxValue;
 
@@ -166,9 +161,8 @@ namespace PGD.Drones
 
                 Vector3 closestPoint = origin + direction * alongRay; // 射线上距离实体最近的点
                 float perpDistance = Vector3.Distance(closestPoint, entityPos); // 实体中心到射线上最近点的距离
-
-                // 根据深度扩展容差，越远的实体允许稍大的偏差
-                float dynamicRadius = cubeRadius + alongRay * 0.01f;
+                
+                float dynamicRadius = cubeRadius + alongRay * 0.01f; // 根据深度扩展容差，越远的实体允许稍大的偏差
                 if (perpDistance > dynamicRadius) continue;
 
                 float score = perpDistance + alongRay * depthBias; // 优先挑选离镜头近的实体

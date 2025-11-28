@@ -31,15 +31,13 @@ namespace PGD.Drones
 
         public void Initialize()
         {
-            Debug.Log("batch批量创建实体");
-            
             var batch = world.GetBatchBuilder(false);
             batch.AddComponent(new PGDPosition())
-            .AddComponent(new PGDTransform())
-            .AddComponent(new Start())
-            .AddComponent(new Target())
-            .AddComponent(new CubeColor())
-            .AddTag<Disabled>();
+                .AddComponent(new PGDTransform())
+                .AddComponent(new Start())
+                .AddComponent(new Target())
+                .AddComponent(new CubeColor())
+                .AddTag<Disabled>();
 
             for (int n = 0; n < maxDroneCount; n++)
             {
@@ -55,18 +53,15 @@ namespace PGD.Drones
             CleanupWithinPGD();
             
             int i = 0;
-            int n = 0;
             foreach (var entity in allQuery.Entities)
             {
                 if (i++ < count)
                 {
                     commandQueue.RemoveTag<Disabled>(entity.Id);
-                    n++;
                 }
                 else
                 {
                     commandQueue.AddTag<Disabled>(entity.Id);
-                    // commandQueue.AddComponent<PGDPosition>(entity.Id);
                 }
             }
             commandQueue.Apply();
@@ -192,12 +187,10 @@ namespace PGD.Drones
         // 生成命中热点图
         public void PlotHotspotGraph()
         {
-            var cq = world.GetCommandQueue();
-            
             foreach (var entity in activeQuery.Entities)
             {
-                cq.AddComponent(entity.Id, new CubeColor { Value = Color.gray });
-                cq.RemoveTag<ColorToBeUpdated>(entity.Id);
+                commandQueue.AddComponent(entity.Id, new CubeColor { Value = Color.gray });
+                commandQueue.RemoveTag<ColorToBeUpdated>(entity.Id);
             }
             
             var hitsLookup = world.ComponentLookup<HitCounter, int>();
@@ -215,37 +208,35 @@ namespace PGD.Drones
 
                 foreach (var entityId in buckets.Ids)
                 {
-                    cq.AddComponent(entityId, new CubeColor { Value = color });
+                    commandQueue.AddComponent(entityId, new CubeColor { Value = color });
                 }
             }
             
-            cq.Apply();
+            commandQueue.Apply();
         }
 
         // 清除颜色组件和待更新颜色的标签
         public void ClearAllColors()
         {
-            var cq = world.GetCommandQueue();
             foreach (var entity in activeQuery.Entities)
             {
-                cq.RemoveComponent<CubeColor>(entity.Id);
-                cq.RemoveTag<ColorToBeUpdated>(entity.Id);
+                commandQueue.RemoveComponent<CubeColor>(entity.Id);
+                commandQueue.RemoveTag<ColorToBeUpdated>(entity.Id);
             }
             
             Debug.Log($"清除了{activeQuery.EntityCount}个实体的CubeColor和ColorToBeUpdated");
-            cq.Apply();
+            commandQueue.Apply();
         }
         
         // 清除记录命中次数的Lookup组件
         public void ClearHitCounters()
         {
-            var cq = world.GetCommandQueue();
             var hitQuery = world.Query<HitCounter>();
             foreach (var entity in hitQuery.Entities)
             {
-                cq.RemoveComponent<HitCounter>(entity.Id);
+                commandQueue.RemoveComponent<HitCounter>(entity.Id);
             }
-            cq.Apply();
+            commandQueue.Apply();
         }
 
         
@@ -256,7 +247,6 @@ namespace PGD.Drones
             ClearAllColors(); // 清理颜色和颜色待更新标签
             ClearHitCounters(); // 清除命中计数器lookup
 
-            // TODO: FindSystem的bool参数含义
             // 删除颜色更新系统
             var colorUpdateSystem = world.FindSystem<ColorPropagationSystem>(false);
             if (colorUpdateSystem != null && colorUpdateSystem.Activated)

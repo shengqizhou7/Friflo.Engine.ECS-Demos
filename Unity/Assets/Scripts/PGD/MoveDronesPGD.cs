@@ -79,7 +79,6 @@ public class MoveDronesPGD : DroneSystemBase
         int n = 0;
         drones.transQuery.ForEachEntity(((ref PGDTransform transform, IEntity entity) =>
         {
-            // 检查实体是否有自定义颜色组件
             if (entity.HasComponent<CubeColor>())
             {
                 var cubeColor = entity.GetComponent<CubeColor>();
@@ -87,12 +86,10 @@ public class MoveDronesPGD : DroneSystemBase
             }
             else
             {
-                // 使用默认颜色
-                colorData[n] = defaultColor;
+                colorData[n] = defaultColor; // 无cubeColor组件则使用默认颜色
             }
             
-            instData[n] = transform.mtr.AsUnityMatrix4x4();
-            n++;
+            instData[n++] = transform.mtr.AsUnityMatrix4x4();
         }));
         
         // int renderCount = n;
@@ -114,12 +111,6 @@ public class MoveDronesPGD : DroneSystemBase
     }
 
     public override void BuildNeighborRelations() => drones.BuildNeighborRelations();
-
-    public override void ClearNeighborRelations() => drones.ClearNeighborRelations();
-
-    public override void ClearAllColors() => drones.ClearAllColors();
-
-    public override void ClearHitCounters() => drones.ClearHitCounters();
 
     public override void PlotHotspotGraph() => drones.PlotHotspotGraph();
     

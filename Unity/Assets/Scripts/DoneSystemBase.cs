@@ -25,9 +25,6 @@ public interface IDroneSystem
     void IncreaseCount();
     void DecreaseCount();
     void BuildNeighborRelations();
-    void ClearNeighborRelations();
-    void ClearAllColors();
-    void ClearHitCounters();
     void PlotHotspotGraph();
     void CleanupResources();
 }
@@ -79,9 +76,6 @@ public abstract class DroneSystemBase : MonoBehaviour, IDroneSystem
     public abstract void DecreaseCount();
     public abstract void CleanupResources();
     public abstract void BuildNeighborRelations();
-    public abstract void ClearNeighborRelations();
-    public abstract void ClearAllColors();
-    public abstract void ClearHitCounters();
     public abstract void PlotHotspotGraph();
 
     private void HideEditorPlane()

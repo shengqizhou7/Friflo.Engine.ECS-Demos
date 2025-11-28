@@ -20,11 +20,11 @@ public class MoveDronesEntities : DroneSystemBase
     private Color defaultColor = Color.gray;
     
     private EntityQuery entitiesQuery; 
-    private ComponentTypeHandle<LocalTransform> transfromTypeHandle;
+    private ComponentTypeHandle<LocalTransform> transformTypeHandle;
     private ComponentTypeHandle<CubeColor> cubeColorTypeHandle;
     private EntityManager entityManager;
 
-    private NativeArray<float4x4> transfromMatrices;
+    private NativeArray<float4x4> transformMatrices;
  
     void Start()
     {
@@ -55,10 +55,10 @@ public class MoveDronesEntities : DroneSystemBase
             ComponentType.ReadOnly<LocalTransform>(),
             ComponentType.Exclude<DroneDisabled>());
         
-        transfromTypeHandle = entityManager.GetComponentTypeHandle<LocalTransform>(true);
+        transformTypeHandle = entityManager.GetComponentTypeHandle<LocalTransform>(true);
         cubeColorTypeHandle = entityManager.GetComponentTypeHandle<CubeColor>(true);
         
-        transfromMatrices = new NativeArray<float4x4>(drones.maxDroneCount, Allocator.Persistent);
+        transformMatrices = new NativeArray<float4x4>(drones.maxDroneCount, Allocator.Persistent);
     }
     
     private void SetShape (Shape shape)
@@ -100,19 +100,19 @@ public class MoveDronesEntities : DroneSystemBase
             return;
         }
         
-        transfromTypeHandle = entityManager.GetComponentTypeHandle<LocalTransform>(true);
+        transformTypeHandle = entityManager.GetComponentTypeHandle<LocalTransform>(true);
         cubeColorTypeHandle = entityManager.GetComponentTypeHandle<CubeColor>(true);
 
         int maxEntitiesToRender = Math.Min(entityCount, instData.Length);
         int count = 0;
         
-        NativeArray<ArchetypeChunk> chunks = entitiesQuery.ToArchetypeChunkArray(Allocator.Temp);
+        using var chunks = entitiesQuery.ToArchetypeChunkArray(Allocator.Temp);
 
         for (int c = 0; c < chunks.Length && count < maxEntitiesToRender; c++)
         {
             var chunk = chunks[c];
             
-            var transfroms = chunk.GetNativeArray(ref transfromTypeHandle);
+            var transforms = chunk.GetNativeArray(ref transformTypeHandle);
             bool chunkHasCubeColor = chunk.Has(ref cubeColorTypeHandle);
             NativeArray<CubeColor> cubeColors = default;
             if (chunkHasCubeColor)
@@ -125,11 +125,11 @@ public class MoveDronesEntities : DroneSystemBase
 
             for (int i = 0; i < entitiesToProcess; i++)
             {
-                var transfrom = transfroms[i];
+                var transform = transforms[i];
 
                 Matrix4x4 matrix = Matrix4x4.TRS(
-                    transfrom.Position,
-                    transfrom.Rotation,
+                    transform.Position,
+                    transform.Rotation,
                     Vector4.one);
                 instData[count] = matrix;
 
@@ -167,13 +167,7 @@ public class MoveDronesEntities : DroneSystemBase
     }
 
     public override void BuildNeighborRelations() => drones.BuildNeighborRelations();
-
-    public override void ClearNeighborRelations() => drones.ClearNeighborRelations();
-
-    public override void ClearAllColors() => drones.ClearAllColors();
-
-    public override void ClearHitCounters() => drones.ClearHitCounters();
-
+    
     public override void PlotHotspotGraph() => drones.GenerateHotspotGraph(defaultColor);
     
     // 切换实现时触发
@@ -185,9 +179,9 @@ public class MoveDronesEntities : DroneSystemBase
             entitiesQuery.Dispose();
         }
 
-        if (transfromMatrices.IsCreated)
+        if (transformMatrices.IsCreated)
         {
-            transfromMatrices.Dispose();
+            transformMatrices.Dispose();
         }
 
         drones.CleanupOnSwitchImpl();

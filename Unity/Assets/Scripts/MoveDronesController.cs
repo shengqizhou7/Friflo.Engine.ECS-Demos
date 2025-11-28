@@ -65,7 +65,7 @@ public class MoveDronesController : MonoBehaviour
         _currentSystem = DroneSystemFactory.CreateSystem(newType, gameObject);
         InitializeSystem(_currentSystem);
         _currentSystem.EnableSystem();
-        NeighborController._currentSystem =  _currentSystem;
+        NeighborController.currentSystem =  _currentSystem;
     }
 
     private void InitializeSystem(IDroneSystem system)

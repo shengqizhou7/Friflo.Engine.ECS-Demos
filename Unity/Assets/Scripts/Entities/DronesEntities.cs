@@ -174,8 +174,6 @@ namespace Entities.Drones
 
             using var entities = activeDronesQuery.ToEntityArray(Allocator.Temp);
             using var transforms = activeDronesQuery.ToComponentDataArray<LocalTransform>(Allocator.Temp);
-            float neighborDistanceSq = NeighborController.neighborDistance * NeighborController.neighborDistance;
-
             for (int i = 0; i < entities.Length; i++)
             {
                 var entity = entities[i];
@@ -239,7 +237,7 @@ namespace Entities.Drones
                 }
             }
 
-            var hitQuery = entityManager.CreateEntityQuery(ComponentType.ReadOnly<HitCounter>());
+            using var hitQuery = entityManager.CreateEntityQuery(ComponentType.ReadOnly<HitCounter>());
             using var hitEntities = hitQuery.ToEntityArray(Allocator.Temp);
             using var hitData = hitQuery.ToComponentDataArray<HitCounter>(Allocator.Temp);
 
@@ -277,7 +275,7 @@ namespace Entities.Drones
 
         public void ClearHitCounters()
         {
-            var hitQuery = entityManager.CreateEntityQuery(ComponentType.ReadOnly<HitCounter>());
+            using var hitQuery = entityManager.CreateEntityQuery(ComponentType.ReadOnly<HitCounter>());
             using var entities = hitQuery.ToEntityArray(Allocator.Temp);
             foreach (var entity in entities)
             {

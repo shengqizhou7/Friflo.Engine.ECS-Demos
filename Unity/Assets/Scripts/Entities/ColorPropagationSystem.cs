@@ -137,13 +137,17 @@ namespace Entities.Drones
 
         private void UpdateNeighborColors(Color color)
         {
-            var ecb = new EntityCommandBuffer(Allocator.Temp);
-            foreach (var entity in _colorUpdateQuery.ToEntityArray(Allocator.Temp))
+            using var entities = _colorUpdateQuery.ToEntityArray(Allocator.Temp);
+            using var ecb = new EntityCommandBuffer(Allocator.Temp);
+            
+            for (int i = 0; i < entities.Length; i++)
             {
+                var entity = entities[i];
                 var neighbors = _entityManager.GetBuffer<NeighborOf>(entity);
                 foreach (var neighbor in neighbors)
                 {
-                    if (_entityManager.HasComponent<CubeColor>(neighbor.Target) &&  _entityManager.GetComponentData<CubeColor>(neighbor.Target).Value.Equals(color))
+                    if (_entityManager.HasComponent<CubeColor>(neighbor.Target) &&
+                        _entityManager.GetComponentData<CubeColor>(neighbor.Target).Value.Equals(color))
                     {
                         ecb.AddComponent(entity, new CubeColor(color));
                         ecb.RemoveComponent<ColorToBeUpdated>(entity);
@@ -151,8 +155,8 @@ namespace Entities.Drones
                     }
                 }
             }
+            
             ecb.Playback(_entityManager);
-            ecb.Dispose();
         }
 
         private Entity FindNearestEntityOnRay(Ray ray)
