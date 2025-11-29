@@ -59,7 +59,7 @@ namespace Entities.Drones
                 typeof(LocalTransform),
                 typeof(DroneAnimation),
                 typeof(DronePosition),
-                typeof(CubeColor),
+                // typeof(CubeColor),
                 typeof(DroneDisabled),
                 typeof(NeighborOf));
             
