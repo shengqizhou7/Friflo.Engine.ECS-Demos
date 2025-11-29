@@ -6,7 +6,7 @@ namespace PGD.Drones
     public class DronesPGD
     {
         public IECSWorld world;
-        public readonly int maxDroneCount = 255 * 1024;
+        public readonly int maxDroneCount = 256 * 1024;
 
         private readonly IQuery<Start, PGDPosition> startPositionQuery;
         private readonly IQuery<Target> targetQuery;
@@ -36,7 +36,6 @@ namespace PGD.Drones
                 .AddComponent(new PGDTransform())
                 .AddComponent(new Start())
                 .AddComponent(new Target())
-                .AddComponent(new CubeColor())
                 .AddTag<Disabled>();
 
             for (int n = 0; n < maxDroneCount; n++)

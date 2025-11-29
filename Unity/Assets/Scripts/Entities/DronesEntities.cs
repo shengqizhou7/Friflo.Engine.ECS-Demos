@@ -10,7 +10,7 @@ namespace Entities.Drones
     {
         private readonly World world;
         private readonly EntityManager entityManager;
-        public readonly int maxDroneCount = 255 * 1024;
+        public readonly int maxDroneCount = 256 * 1024;
 
         private readonly EntityQuery allDronesQuery;
         private readonly EntityQuery activeDronesQuery;
@@ -76,7 +76,7 @@ namespace Entities.Drones
                 entityManager.SetComponentData(entity, new DroneTarget { Value = zeroPos });
                 entityManager.SetComponentData(entity, new DroneAnimation { Duration = 500, Elapsed = 0 });
                 entityManager.SetComponentData(entity, LocalTransform.FromPosition(zeroPos));
-                entityManager.SetComponentData(entity, new CubeColor(Color.gray));
+                // entityManager.SetComponentData(entity, new CubeColor(Color.gray));
                 entityManager.AddBuffer<NeighborOf>(entity);
             }
             

@@ -5,7 +5,7 @@ public class NeighborController : MonoBehaviour
 {
     private static NeighborController instance;
     
-    public static float neighborDistance = 2f; //TODO: 是否应该在不同排列场景中设置不同的数值？
+    public static float neighborDistance = 2f;
     public static bool relationBuilt; // 是否已构建过邻居关系
     public static IDroneSystem currentSystem;
     [SerializeField] private Button hotSpotButton;
@@ -32,5 +32,6 @@ public class NeighborController : MonoBehaviour
     {
         Debug.Log($"当前DOTS世界中的总实体数: {Unity.Entities.World.DefaultGameObjectInjectionWorld.EntityManager.UniversalQuery.CalculateEntityCount()}");
         Debug.Log($"当前PGD世界中的总实体数: {PGDGameContext.GetWorld().Query().EntityCount}");
+        Debug.Log($"当前PGD世界中的总关系数: {PGDGameContext.GetWorld().QueryRelation<PGD.Drones.NeighborOf>().EntityCount}");
     }
 }

@@ -22,7 +22,7 @@ public class MoveDronesController : MonoBehaviour
     [Header("实现选择")]
     [SerializeField] public static ImplementationType implementationType;
     
-    public static IDroneSystem _currentSystem;
+    private IDroneSystem _currentSystem;
 
     private void Awake()
     {
@@ -66,6 +66,7 @@ public class MoveDronesController : MonoBehaviour
         InitializeSystem(_currentSystem);
         _currentSystem.EnableSystem();
         NeighborController.currentSystem =  _currentSystem;
+        NeighborController.UpdateHotSpotButtonState();
     }
 
     private void InitializeSystem(IDroneSystem system)
