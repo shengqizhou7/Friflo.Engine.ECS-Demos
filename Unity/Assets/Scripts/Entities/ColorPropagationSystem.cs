@@ -13,7 +13,10 @@ namespace Entities.Drones
         private EntityQuery _colorUpdateQuery;
         private EntityManager _entityManager;
 
-        private Color[] targetColors =
+        const float cubeRadius = 0.6f; // 方块半径（米），根据阵列大小可调
+        const float depthBias = 1f; // 深度权重，越靠近摄像机权重越高
+        
+        private static readonly Color[] targetColors =
         {
             new(0.2f, 0.8f, 0.9f, 1f),
             new(1.0f, 0.4f, 0.4f, 1f),
@@ -180,13 +183,13 @@ namespace Entities.Drones
                 Vector3 closestPoint = ray.origin + ray.direction.normalized * alongRay;
                 float perpDistance = Vector3.Distance(closestPoint, entityPos);
 
-                float dynamicRadius = 0.6f + alongRay * 0.01f;
+                float dynamicRadius = cubeRadius + alongRay * 0.01f;
                 if (perpDistance > dynamicRadius)
                 {
                     continue;
                 }
 
-                float score = perpDistance + alongRay * 1f;
+                float score = perpDistance + alongRay * depthBias;
                 if (score < bestScore)
                 {
                     bestScore = score;

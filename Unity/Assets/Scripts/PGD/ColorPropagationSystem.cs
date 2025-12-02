@@ -5,8 +5,11 @@ namespace PGD.Drones
 {
     public class ColorPropagationSystem : PGDSystem<PGDTransform, PGDPosition, Start, Target>
     {
+        const float cubeRadius = 0.6f; // 方块半径（米），根据阵列大小可调
+        const float depthBias = 1f; // 深度权重，越靠近摄像机权重越高
+        
         // 颜色列表
-        private Color[] targetColors = 
+        private static readonly Color[] targetColors = 
         {
             new (0.2f, 0.8f, 0.9f, 1f),
             new (1.0f, 0.4f, 0.4f, 1f),
@@ -139,9 +142,6 @@ namespace PGD.Drones
 
             Vector3 origin = ray.origin;
             Vector3 direction = ray.direction.normalized;
-
-            const float cubeRadius = 0.6f; // 方块半径（米），根据阵列大小可调
-            const float depthBias = 1f; // 深度权重，越靠近摄像机权重越高
 
             float bestScore = float.MaxValue;
 

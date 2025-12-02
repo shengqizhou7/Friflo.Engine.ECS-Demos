@@ -13,7 +13,7 @@ public class MoveDronesPGD : DroneSystemBase
     private Matrix4x4[] instData;
     private Vector4[] colorData;
     private MaterialPropertyBlock propertyBlock;
-    private Color defaultColor = Color.gray;
+    private static readonly Color defaultColor = Color.gray;
     
     void Start()
     {

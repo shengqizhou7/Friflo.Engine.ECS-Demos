@@ -20,8 +20,8 @@ public class NeighborController : MonoBehaviour
     public static void UpdateHotSpotButtonState()
     {
         bool inECS = MoveDronesController.implementationType != ImplementationType.OOP; // OOP实现中禁用两个按钮
-        instance.hotSpotButton.interactable = inECS & relationBuilt;
-        instance.relationButton.interactable = inECS & !relationBuilt;
+        instance.hotSpotButton.interactable = inECS && relationBuilt;
+        instance.relationButton.interactable = inECS && !relationBuilt;
     }
     
     public void BuildNeighborRelations() => currentSystem?.BuildNeighborRelations(); // 建立邻居关系
