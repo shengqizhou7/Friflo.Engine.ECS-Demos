@@ -24,7 +24,7 @@ namespace Entities.Drones
             var startType = GetComponentTypeHandle<DroneStart>(true);
             var targetType = GetComponentTypeHandle<DroneTarget>(true);
             var animationType = GetComponentTypeHandle<DroneAnimation>(false);
-            var transfromType = GetComponentTypeHandle<LocalTransform>(false);
+            var transformType = GetComponentTypeHandle<LocalTransform>(false);
             
             NativeArray<ArchetypeChunk> chunks = query.ToArchetypeChunkArray(Allocator.Temp);
             foreach (var chunk in chunks)
@@ -32,7 +32,7 @@ namespace Entities.Drones
                 var starts = chunk.GetNativeArray(ref startType);
                 var targets = chunk.GetNativeArray(ref targetType);
                 var animations = chunk.GetNativeArray(ref animationType);
-                var transfroms = chunk.GetNativeArray(ref transfromType);
+                var transfroms = chunk.GetNativeArray(ref transformType);
                 
                 var count = chunk.Count;
                 for (int i = 0; i < count; i++)

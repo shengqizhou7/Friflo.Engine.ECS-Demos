@@ -3,7 +3,6 @@ using UnityEngine.EventSystems;
 
 namespace PGD.Drones
 {
-    [DisableAutoRegister]
     public class ColorPropagationSystem : PGDSystem<PGDTransform, PGDPosition, Start, Target>
     {
         // 颜色列表

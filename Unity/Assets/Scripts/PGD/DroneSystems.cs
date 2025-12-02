@@ -3,7 +3,6 @@ using UnityEngine;
 
 namespace PGD.Drones
 {
-    [DisableAutoRegister]
     public partial class DroneUpdateTransformSystem : PGDSystem<PGDTransform, PGDPosition, Start, Target>
     {
         private static float s_GlobalTime = 0f;
