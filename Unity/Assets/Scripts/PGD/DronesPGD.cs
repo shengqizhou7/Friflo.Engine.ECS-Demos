@@ -169,15 +169,21 @@ namespace PGD.Drones
         {
             if (!NeighborController.relationBuilt) return;
             
-            int n = 0;
+            // 先收集所有需要删除的关系（实体和目标），避免在迭代中删除
+            var relationsToRemove = new System.Collections.Generic.List<(IEntity entity, IEntity target)>();
             var queryRelation = world.QueryRelation<NeighborOf>();
             queryRelation.ForEachEntity((ref NeighborOf neighborOf, IEntity entity) =>
             {
-                entity.RemoveRelation<NeighborOf>(neighborOf.Target);
-                n++;
+                relationsToRemove.Add((entity, neighborOf.Target));
             });
             
-            Debug.Log($"清除了 {n} 个实体的邻居关系。残留 { world.QueryRelation<NeighborOf>().EntityCount } 个关系");
+            // 批量删除关系
+            foreach (var (entity, target) in relationsToRemove)
+            {
+                entity.RemoveRelation<NeighborOf>(target);
+            }
+            
+            Debug.Log($"清除了 {relationsToRemove.Count} 个实体的邻居关系。残留 { world.QueryRelation<NeighborOf>().EntityCount } 个关系");
             
             NeighborController.relationBuilt = false;
             NeighborController.UpdateHotSpotButtonState();
